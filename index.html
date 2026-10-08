@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#080c14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GeoStereo">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <title>GeoStereo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: #080c14;
+      color: #e2e8f0;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      /* iPhoneのノッチ・ホームバーを避ける */
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ホーム画面アプリ(black-translucent)ではステータスバーの裏まで描画されるため、
+       ヘッダーの上にステータスバー分の余白を確保する */
+    #app-header {
+      padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+    }
+
+    .font-mono-numbers {
+      font-family: var(--font-mono);
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .live-pulse {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+  <header id="app-header" class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-3 pb-2">
+    <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-width="2" d="M12 3v18M3 12h18M7.5 7.5l9 9M7.5 16.5l9-9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-base font-bold tracking-tight text-white">GeoStereo</h1>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex items-center gap-1.5">
+        <button id="btn-open-guide" class="px-2 py-1 text-xs rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-900/50 transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>設置ガイド</span>
+        </button>
+
+        <button id="btn-toggle-sim" class="px-2 py-1 text-xs rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span id="label-sim-status">テスト</span>
+        </button>
+
+        <button id="btn-sensor-perm" class="px-2.5 py-1 text-xs font-semibold rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-sm shadow-cyan-600/30 flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span id="label-perm">開始</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto w-full px-2.5 py-2 flex-1 flex flex-col gap-2">
+
+    <!-- Manual Simulation Controls -->
+    <section id="panel-sim" class="hidden bg-slate-900/90 rounded-xl p-2.5 border border-amber-500/30 shadow-lg">
+      <div class="flex justify-between items-center mb-1.5">
+        <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
+          <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          手動シミュレータ (PC・テスト用)
+        </span>
+        <span class="text-[10px] text-slate-400">スライダーで姿勢操作</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <div class="flex justify-between text-slate-300 mb-0.5">
+            <span>走向 (Strike):</span>
+            <span id="sim-strike-val" class="font-mono text-cyan-400 font-bold">045°</span>
+          </div>
+          <input id="slider-sim-strike" type="range" min="0" max="359" value="45" class="w-full accent-cyan-400 bg-slate-800 rounded h-1 cursor-pointer">
+        </div>
+        <div>
+          <div class="flex justify-between text-slate-300 mb-0.5">
+            <span>傾斜角 (Dip):</span>
+            <span id="sim-dip-val" class="font-mono text-emerald-400 font-bold">35°</span>
+          </div>
+          <input id="slider-sim-dip" type="range" min="0" max="90" value="35" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-gradient-to-b from-slate-900 to-slate-950 rounded-xl p-2.5 border border-slate-800 shadow-xl relative overflow-hidden">
+      <div class="absolute -top-10 -right-10 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <!-- Sensor Status Bar & Magnetic Declination setting -->
+      <div class="flex items-center justify-between text-xs text-slate-400 mb-2 border-b border-slate-800/80 pb-1.5">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span id="sensor-dot" class="w-2 h-2 rounded-full bg-slate-600 flex-shrink-0"></span>
+          <span id="sensor-text" class="text-[11px] truncate">待機中</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+            <label for="input-declination" class="text-[10px] text-slate-400 whitespace-nowrap">偏角:</label>
+            <input id="input-declination" type="number" step="0.1" value="0.0" class="w-12 bg-transparent text-right font-mono text-cyan-300 text-xs focus:outline-none">
+            <span class="text-[10px] text-slate-400">°</span>
+          </div>
+          <button id="btn-gps-declination" type="button" class="px-2 py-1 text-[10px] font-semibold rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/70 hover:bg-emerald-900 transition flex items-center gap-1 whitespace-nowrap" title="GPSで現在地を取得し、NOAA WMMから磁気偏角を取得">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.2-4.8a4 4 0 11-5.6 5.6 4 4 0 015.6-5.6z"/>
+            </svg>
+            GPS偏角
+          </button>
+        </div>
+      </div>
+      <div id="gps-declination-status" class="text-[9px] text-slate-500 text-right -mt-1 mb-1 truncate">
+        手動偏角: 0.0°（東偏＋ / 西偏−）
+      </div>
+
+      <!-- 3-Column Display: Strike, Dip, Dip Direction & Pole Info -->
+      <div class="grid grid-cols-3 gap-1.5 text-center">
+        <!-- Strike Panel -->
+        <div class="bg-slate-950/60 rounded-lg p-1.5 border border-slate-800/80">
+          <div class="text-[10px] font-semibold text-cyan-400">STRIKE (走向 RHR)</div>
+          <div class="flex items-baseline justify-center gap-0.5 mt-0.5">
+            <span id="disp-strike" class="text-2xl font-bold font-mono-numbers text-white tracking-tight">---</span>
+            <span class="text-xs text-slate-400">°</span>
+          </div>
+          <div id="disp-strike-quadrant" class="text-lg font-bold font-mono-numbers text-cyan-300 mt-0.5 leading-tight">---</div>
+        </div>
+
+        <!-- Dip Panel -->
+        <div class="bg-slate-950/60 rounded-lg p-1.5 border border-slate-800/80">
+          <div class="text-[10px] font-semibold text-emerald-400">DIP (傾斜角)</div>
+          <div class="flex items-baseline justify-center gap-0.5 mt-0.5">
+            <span id="disp-dip" class="text-2xl font-bold font-mono-numbers text-white tracking-tight">--</span>
+            <span class="text-xs text-slate-400">°</span>
+          </div>
+          <div id="disp-dip-notation" class="text-lg font-bold font-mono-numbers text-emerald-400 mt-0.5 leading-tight" title="傾斜角と傾斜方位（例: 45°S）">--</div>
+        </div>
+
+        <!-- Dip Direction & Pole Trend Panel -->
+        <div class="bg-slate-950/60 rounded-lg p-1.5 border border-slate-800/80">
+          <div class="text-[10px] font-semibold text-purple-400">DIP DIR (傾斜方位)</div>
+          <div class="flex items-baseline justify-center gap-0.5 mt-0.5">
+            <span id="disp-dipdir" class="text-2xl font-bold font-mono-numbers text-white tracking-tight">---</span>
+            <span class="text-xs text-slate-400">°</span>
+          </div>
+          <div id="disp-pole-trend-box" class="text-lg font-bold font-mono-numbers text-purple-300 mt-0.5 leading-tight whitespace-nowrap" title="極の方位 (Trend = DipDir + 180)">
+            <span class="text-[10px] font-semibold text-purple-300/80">極方位</span> <span id="disp-pole-trend">---</span>°
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-slate-900 rounded-xl p-2 border border-slate-800 flex-1 flex flex-col items-center justify-center relative shadow-inner">
+
+      <!-- Stereonet Toolbar: Group Filters, Pole & Great Circle Toggles -->
+      <div class="w-full flex flex-col gap-1.5 text-[11px] px-1 mb-1 border-b border-slate-800/70 pb-1.5">
+        <!-- Row 1: Group filter checkboxes (動的描画) -->
+        <div class="flex items-center justify-between flex-wrap gap-1">
+          <div id="group-filter-list" class="flex items-center gap-2 flex-wrap">
+            <span class="text-[10px] text-slate-400 font-semibold">表示面:</span>
+          </div>
+
+          <button id="btn-show-stats" class="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 hover:bg-indigo-900 transition flex items-center gap-0.5 ml-auto">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            群平均
+          </button>
+        </div>
+
+        <!-- Row 2: Elements toggle (Poles vs Great Circles) -->
+        <div class="flex items-center justify-between text-[10px] bg-slate-950/80 px-2 py-1 rounded border border-slate-800/80">
+          <div class="flex items-center gap-3">
+            <span class="text-slate-400 font-semibold">投影要素:</span>
+            <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+              <input type="checkbox" id="toggle-show-poles" checked class="accent-cyan-400 rounded scale-90">
+              <span class="font-medium">● 極</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+              <input type="checkbox" id="toggle-show-gc" checked class="accent-cyan-400 rounded scale-90">
+              <span class="font-medium">⌒ 大円</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Wrapper -->
+      <div id="canvas-container" class="relative w-full max-w-[310px] sm:max-w-[340px] aspect-square flex items-center justify-center my-0.5">
+        <canvas id="stereonet-canvas" class="w-full h-full rounded-full cursor-crosshair drop-shadow-2xl"></canvas>
+        <!-- Mini level (水平計・左上) -->
+        <div id="mini-level" class="absolute top-0 left-0 w-11 flex flex-col items-center pointer-events-none select-none" title="水平計（端末の傾き）">
+          <canvas id="level-canvas" class="w-11 h-11 rounded-full"></canvas>
+          <span id="level-readout" class="text-[9px] font-mono text-sky-300 leading-none mt-0.5"><span id="level-tilt-val">0.0</span>°</span>
+        </div>
+        <!-- Mini compass (端末の向きに合わせて回転) -->
+        <div id="mini-compass" class="absolute top-0 right-0 w-11 flex flex-col items-center pointer-events-none select-none" title="方位磁石（真北基準・偏角補正済み）">
+          <svg viewBox="-24 -24 48 48" class="w-11 h-11">
+            <circle r="22" fill="#0b1220" fill-opacity="0.85" stroke="#334155" stroke-width="1.5"/>
+            <g id="compass-rose">
+              <polygon points="0,-17 4,0 -4,0" fill="#f43f5e"/>
+              <polygon points="0,17 4,0 -4,0" fill="#94a3b8"/>
+              <text y="-18.5" font-size="7" font-weight="bold" fill="#fda4af" text-anchor="middle" font-family="monospace">N</text>
+              <text x="19" y="2.5" font-size="6" fill="#94a3b8" text-anchor="middle" font-family="monospace">E</text>
+              <text y="23" font-size="6" fill="#94a3b8" text-anchor="middle" font-family="monospace">S</text>
+              <text x="-19" y="2.5" font-size="6" fill="#94a3b8" text-anchor="middle" font-family="monospace">W</text>
+            </g>
+            <polygon points="0,-24 -2.5,-20 2.5,-20" fill="#38bdf8"/>
+          </svg>
+          <span id="compass-heading" class="text-[9px] font-mono text-sky-300 leading-none -mt-0.5">---°</span>
+        </div>
+      </div>
+
+      <!-- Stereonet Tooltip/Inspector display -->
+      <div id="stereonet-tooltip" class="h-4 text-center text-[11px] text-slate-400 font-mono flex items-center justify-center truncate px-2">
+        <span>プロットされた極点または大円をタップで詳細表示</span>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-2">
+      <div class="grid grid-cols-4 gap-2">
+        <!-- Big Record Button with Group Indication -->
+        <button id="btn-record" class="col-span-3 py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-blue-500 active:scale-[0.98] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/30 transition">
+          <span class="w-3 h-3 rounded-full bg-white animate-pulse"></span>
+          <span>測定値を記録 (<span id="btn-record-group-name">Y面</span>)</span>
+        </button>
+
+        <!-- CSV Export Button -->
+        <button id="btn-export-csv" class="col-span-1 py-3 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-200 border border-slate-700 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5L19 7.5V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>CSV出力</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-2">
+      <!-- Right Panel: Structural Shear Plane Group Selector -->
+      <div class="bg-slate-900 rounded-xl p-2 border border-slate-800 flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-1.5 px-0.5 flex-wrap gap-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span class="text-[11px] font-bold text-slate-300">測定面グループ</span>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <!-- グループ追加ボタン -->
+            <button id="btn-add-group" type="button" class="text-[10px] text-cyan-300 hover:text-cyan-200 transition flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 hover:border-cyan-600" title="新しい測定面グループを追加">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span>追加</span>
+            </button>
+
+            <!-- グループ編集ボタン -->
+            <button id="btn-edit-active-group" type="button" class="text-[10px] text-slate-300 hover:text-white transition flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-950/80 border border-slate-800 hover:border-slate-700" title="選択中グループの名前・色・説明を編集">
+              <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              <span>編集</span>
+            </button>
+
+            <!-- グループデータ消去ボタン -->
+            <button id="btn-clear-active-group" type="button" class="text-[10px] text-slate-400 hover:text-rose-400 transition flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-950/80 border border-slate-800 hover:border-rose-900/60" title="選択中のグループの測定データを全削除">
+              <svg class="w-3 h-3 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              <span id="label-clear-active-group">消去</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Group Selector Buttons (横スクロール対応 & 動的描画) -->
+        <div class="flex gap-1 overflow-x-auto pb-1" id="group-selector-container">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Active Group Description & Memo snippet -->
+        <div class="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 bg-slate-950/70 px-2 py-1 rounded border border-slate-800">
+          <div id="group-desc-text" class="text-cyan-300 font-medium truncate">
+            Y面 (Principal displacement shear): 断層主変位面・C面
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0 ml-1">
+            <label for="input-note" class="text-slate-500 text-[9px]">メモ:</label>
+            <input id="input-note" type="text" placeholder="露頭#1..." class="bg-transparent border-b border-slate-700 text-slate-200 text-[10px] w-16 sm:w-24 focus:outline-none focus:border-cyan-400">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-2">
+      <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+        <div class="flex items-center justify-between px-3 py-1.5 bg-slate-800/60">
+          <div class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+            </svg>
+            測定データ履歴 (<span id="record-list-count">0</span>件)
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-clear-group-records" class="text-[11px] text-amber-400 hover:text-amber-300 hover:underline">現グループ消去</button>
+            <span class="text-slate-600 text-xs">|</span>
+            <button id="btn-clear-records" class="text-[11px] text-rose-400 hover:text-rose-300 hover:underline">全消去</button>
+          </div>
+        </div>
+
+        <!-- Scrollable record list -->
+        <div id="record-items-container" class="min-h-[18rem] max-h-[70vh] sm:max-h-[32rem] overflow-y-auto divide-y divide-slate-800/60 p-1.5 text-sm">
+          <div id="empty-record-notice" class="py-4 text-center text-slate-500 text-[11px]">
+            まだ記録がありません。「測定値を記録」を押してデータを蓄積してください。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="text-center text-[10px] text-slate-500 py-2 select-none">GeoStereo Made by Yuta Ichizawa</footer>
+
+  </main>
+
+  <!-- 1. Installation Guide Modal -->
+  <div id="guide-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          スマホの正しい当て方・設置ガイド
+        </h3>
+        <button id="btn-close-guide" class="text-slate-400 hover:text-white p-1 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <div class="bg-cyan-950/60 border border-cyan-800/80 p-2.5 rounded-xl">
+          <div class="font-bold text-cyan-300 text-xs mb-1">Q. スマホをどの向きに当てても大丈夫？</div>
+          <p class="text-[11px] text-slate-200">
+            <strong>はい、スマホ背面が層理面に密着していれば、面内でスマホをどの向きに回しても（頭が上でも横でも）走向・傾斜は理論上一定に保たれます。</strong>
+          </p>
+          <p class="text-[10px] text-slate-400 mt-1">
+            本アプリは3次元回転行列を用いて「背面から垂直に突き出る法線ベクトル（Normal Vector）」の地球座標系を計算しているため、面内回転に完全に不変です。
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="font-bold text-white text-xs flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            野外での正確な測定の3大ポイント
+          </div>
+
+          <div class="border border-slate-800 bg-slate-950/70 p-2.5 rounded-lg">
+            <div class="font-semibold text-cyan-400 text-[11px]">① スマホ背面を地層面に「ペタッ」と密着させる</div>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              クリノメーターのように「長辺を水平にする」必要はありません。背面の面全体を層理面・断層面に押し当ててください。
+            </p>
+          </div>
+
+          <div class="border border-slate-800 bg-slate-950/70 p-2.5 rounded-lg">
+            <div class="font-semibold text-amber-400 text-[11px]">② カメラレンズの段差・突起に注意（野帳を挟む）</div>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              近年のスマホはカメラが出っ張っているため、そのまま当てると数度の誤差が生じます。<strong>野帳（フィールドノート）やアクリル板を地層に当て、その上にスマホを載せる</strong>と完璧な平面密着が得られます。
+            </p>
+          </div>
+
+          <div class="border border-slate-800 bg-slate-950/70 p-2.5 rounded-lg">
+            <div class="font-semibold text-emerald-400 text-[11px]">③ 金属物や磁性鉱物からの離隔</div>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              ハンマー、磁鉄鉱を含む岩石、メガネフレーム、腕時計などの金属・磁性体から30cm以上離して測定してください。
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[10px] text-slate-400">
+          <span class="text-white font-semibold">シュミットネット投影の幾何関係:</span><br>
+          大円（弧）は面の傾斜方向（Dip Direction）に膨らみ、極（Pole）は大円と直交し、正反対の方位（Dip Direction + 180°）にプロットされます。
+        </div>
+      </div>
+
+      <div class="mt-4 pt-2 border-t border-slate-800 flex justify-end">
+        <button id="btn-close-guide-footer" class="px-3.5 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-500">理解した</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Group Statistics Modal -->
+  <div id="stats-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-4 shadow-2xl max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+          各面グループの平均姿勢 (Mean Poles)
+        </h3>
+        <button id="btn-close-stats" class="text-slate-400 hover:text-white p-1 text-base">&times;</button>
+      </div>
+
+      <div id="stats-content-list" class="space-y-2 text-xs overflow-y-auto pr-1">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="mt-4 pt-2 border-t border-slate-800 flex justify-end">
+        <button id="btn-close-stats-footer" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold hover:bg-slate-700">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Add / Edit Group Modal -->
+  <div id="group-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <h3 id="group-modal-title" class="text-sm font-bold text-white flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          測定面グループの追加
+        </h3>
+        <button id="btn-close-group-modal" class="text-slate-400 hover:text-white p-1 text-base">&times;</button>
+      </div>
+
+      <form id="group-form" class="space-y-3 text-xs">
+        <div>
+          <label for="input-group-label" class="block text-slate-300 font-semibold mb-1">グループ表示名（略称）<span class="text-rose-400">*</span></label>
+          <input id="input-group-label" type="text" maxlength="6" required placeholder="例: S0, J1, 破砕面" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:outline-none focus:border-cyan-400">
+          <p class="text-[10px] text-slate-500 mt-0.5">ボタンやステレオネットに表示される名前（最大6文字）</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label for="input-group-sub" class="block text-slate-300 font-semibold mb-1">サブ名称 (任意)</label>
+            <input id="input-group-sub" type="text" maxlength="8" placeholder="例: 層理, 節理" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-cyan-400">
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">カラー設定</label>
+            <div class="flex items-center gap-2">
+              <input id="input-group-color" type="color" value="#06b6d4" class="w-8 h-8 rounded border border-slate-700 cursor-pointer bg-transparent">
+              <span id="label-selected-color" class="font-mono text-[11px] text-slate-400">#06b6d4</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">プリセットカラー</label>
+          <div id="palette-container" class="flex flex-wrap gap-1.5">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <div>
+          <label for="input-group-desc" class="block text-slate-300 font-semibold mb-1">詳細説明・メモ (任意)</label>
+          <input id="input-group-desc" type="text" placeholder="例: 走向N45E系の主層理面" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-cyan-400">
+        </div>
+
+        <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+          <button id="btn-delete-group-def" type="button" class="text-rose-400 hover:text-rose-300 text-xs hover:underline hidden">
+            グループ定義を削除
+          </button>
+          <div class="flex gap-2 ml-auto">
+            <button id="btn-cancel-group-modal" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">キャンセル</button>
+            <button id="btn-save-group-modal" type="submit" class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-500">保存</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Toast Notification element -->
+  <div id="toast-box" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);" class="fixed left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-3">
+    <div id="toast-content" class="bg-slate-800 text-white border border-slate-700 px-4 py-2 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2">
+      <span id="toast-icon">✓</span>
+      <span id="toast-msg">記録しました</span>
+    </div>
+  </div>
+
+  <!-- 5. Confirmation Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xs w-full p-4 shadow-2xl">
+      <h3 id="modal-title" class="text-sm font-bold text-white mb-2">確認</h3>
+      <p id="modal-desc" class="text-xs text-slate-300 mb-4">保存された測定データをすべて削除しますか？この操作は元に戻せません。</p>
+      <div class="flex justify-end gap-2">
+        <button id="modal-btn-cancel" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">キャンセル</button>
+        <button id="modal-btn-ok" class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500">削除する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Default Groups Definition */
+    const DEFAULT_GROUPS = {
+      Y: {
+        id: 'Y',
+        label: 'Y面',
+        sub: '主変位',
+        desc: 'Y面 (Principal displacement shear): 断層主変位面・C面',
+        color: '#06b6d4'
+      },
+      P: {
+        id: 'P',
+        label: 'P面',
+        sub: '圧縮',
+        desc: 'P面 (Compressive shear): 最大圧縮軸と共役の逆傾斜剪断割れ目',
+        color: '#f59e0b'
+      },
+      R: {
+        id: 'R',
+        label: 'R面',
+        sub: 'リーデル',
+        desc: 'R面 (Synthetic Riedel shear): 主剪断方向から約15°傾いた合成剪断',
+        color: '#f43f5e'
+      },
+      R_prime: {
+        id: 'R_prime',
+        label: "R'面",
+        sub: '共役R',
+        desc: "R'面 (Antithetic Riedel shear): 主剪断に対して約75°の高角共役剪断",
+        color: '#a855f7'
+      },
+      Other: {
+        id: 'Other',
+        label: 'その他',
+        sub: '層理/他',
+        desc: 'その他 / 層理面 (S0, S1, 方解石脈, 節理面など)',
+        color: '#10b981'
+      }
+    };
+
+    let groups = { ...DEFAULT_GROUPS };
+
+    const PALETTE_COLORS = [
+      '#06b6d4', '#f59e0b', '#f43f5e', '#a855f7', '#10b981',
+      '#3b82f6', '#ec4899', '#eab308', '#14b8a6', '#8b5cf6',
+      '#fb923c', '#94a3b8'
+    ];
+
+    /* App Global State */
+    const state = {
+      sensorActive: false,
+      isSimMode: false,
+      declination: 0.0,
+      gps: {
+        latitude: null,
+        longitude: null,
+        accuracy: null,
+        declinationLoaded: false
+      },
+      activeGroup: 'Y',
+      
+      // Projection view toggles
+      showPoles: true,
+      showGreatCircles: true,
+
+      // Visible group filters
+      groupVisible: {},
+
+      // Smoothed current reading
+      current: {
+        strike: 45,
+        dip: 35,
+        dipDir: 135,
+        beta: 25,
+        gamma: 20
+      },
+
+      filterAlpha: 0.22,
+      records: []
+    };
+
+    function loadGroups() {
+      try {
+        const saved = localStorage.getItem('geostereo_groups_v5');
+        if (saved) {
+          groups = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Groups storage load failed', e);
+      }
+      Object.keys(groups).forEach(gid => {
+        if (state.groupVisible[gid] === undefined) {
+          state.groupVisible[gid] = true;
+        }
+      });
+    }
+
+    function saveGroups() {
+      try {
+        localStorage.setItem('geostereo_groups_v5', JSON.stringify(groups));
+      } catch (e) {
+        console.warn('Groups storage write failed', e);
+      }
+    }
+
+    function formatAngle3(deg) {
+      const rounded = Math.round((deg % 360 + 360) % 360);
+      return String(rounded).padStart(3, '0');
+    }
+
+    function getQuadrantStrike(strike) {
+      strike = (strike % 360 + 360) % 360;
+      if (strike <= 90) return `N${Math.round(strike)}°E`;
+      if (strike <= 180) return `S${Math.round(180 - strike)}°E`;
+      if (strike <= 270) return `S${Math.round(strike - 180)}°W`;
+      return `N${Math.round(360 - strike)}°W`;
+    }
+
+    function getCardinalDirection(angle) {
+      const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+      const index = Math.round(((angle % 360 + 360) % 360) / 22.5) % 16;
+      return directions[index];
+    }
+
+    function projectLambert(R, trendDeg, plungeDeg) {
+      const psi = (90 - plungeDeg) * (Math.PI / 180);
+      const r = R * Math.SQRT2 * Math.sin(psi / 2);
+      const theta = trendDeg * (Math.PI / 180);
+      
+      const x = r * Math.sin(theta);
+      const y = -r * Math.cos(theta);
+      return { x, y, r };
+    }
+
+    function getPoleProjection(R, dipDir, dip) {
+      const poleTrend = (dipDir + 180) % 360;
+      const polePlunge = 90 - dip;
+      const proj = projectLambert(R, poleTrend, polePlunge);
+      return {
+        x: proj.x,
+        y: proj.y,
+        r: proj.r,
+        poleTrend: poleTrend,
+        polePlunge: polePlunge
+      };
+    }
+
+    const levelCanvas = document.getElementById('level-canvas');
+    const levelCtx = levelCanvas.getContext('2d');
+    const levelReadout = document.getElementById('level-readout');
+    const levelTiltVal = document.getElementById('level-tilt-val');
+
+    function drawBubbleLevel() {
+      const dpr = window.devicePixelRatio || 1;
+      const size = levelCanvas.clientWidth;
+      if (size === 0) return;
+
+      levelCanvas.width = size * dpr;
+      levelCanvas.height = size * dpr;
+      levelCtx.setTransform(1, 0, 0, 1, 0, 0);
+      levelCtx.scale(dpr, dpr);
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const maxR = (size / 2) - 1.5;
+      const bubbleR = 4;
+
+      levelCtx.clearRect(0, 0, size, size);
+
+      const bRad = (state.current.beta || 0) * (Math.PI / 180);
+      const gRad = (state.current.gamma || 0) * (Math.PI / 180);
+
+      const totalTilt = Math.round(state.current.dip * 10) / 10;
+      levelTiltVal.textContent = totalTilt.toFixed(1);
+
+      const isLevel = totalTilt <= 2.0;
+      levelReadout.className = 'text-[9px] font-mono leading-none mt-0.5 ' + (isLevel ? 'text-emerald-400 font-bold' : 'text-sky-300');
+
+      // 背景円 (方位磁石と同じ配色)
+      levelCtx.beginPath();
+      levelCtx.arc(cx, cy, maxR, 0, Math.PI * 2);
+      levelCtx.fillStyle = 'rgba(11, 18, 32, 0.85)';
+      levelCtx.fill();
+      levelCtx.lineWidth = 1.5;
+      levelCtx.strokeStyle = isLevel ? '#34d399' : '#334155';
+      levelCtx.stroke();
+
+      // 十字線
+      levelCtx.beginPath();
+      levelCtx.lineWidth = 1;
+      levelCtx.strokeStyle = 'rgba(71, 85, 105, 0.5)';
+      levelCtx.moveTo(cx - maxR, cy); levelCtx.lineTo(cx + maxR, cy);
+      levelCtx.moveTo(cx, cy - maxR); levelCtx.lineTo(cx, cy + maxR);
+      levelCtx.stroke();
+
+      // 中心リング (水平の目安)
+      levelCtx.beginPath();
+      levelCtx.arc(cx, cy, bubbleR + 1.5, 0, Math.PI * 2);
+      levelCtx.strokeStyle = isLevel ? 'rgba(52, 211, 153, 0.9)' : 'rgba(100, 116, 139, 0.7)';
+      levelCtx.stroke();
+
+      // 気泡
+      const scaleFactor = maxR / 45;
+      let bx = cx - Math.sin(gRad) * 45 * scaleFactor;
+      let by = cy - Math.sin(bRad) * 45 * scaleFactor;
+
+      const limit = maxR - bubbleR - 1;
+      const dist = Math.hypot(bx - cx, by - cy);
+      if (dist > limit) {
+        const angle = Math.atan2(by - cy, bx - cx);
+        bx = cx + limit * Math.cos(angle);
+        by = cy + limit * Math.sin(angle);
+      }
+
+      levelCtx.beginPath();
+      levelCtx.arc(bx, by, bubbleR, 0, Math.PI * 2);
+      levelCtx.fillStyle = isLevel ? 'rgba(52, 211, 153, 0.9)' : 'rgba(56, 189, 248, 0.9)';
+      levelCtx.fill();
+      levelCtx.lineWidth = 1;
+      levelCtx.strokeStyle = '#ffffff';
+      levelCtx.stroke();
+    }
+
+    const canvas = document.getElementById('stereonet-canvas');
+    const ctx = canvas.getContext('2d');
+    let hoveredRecordId = null;
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const size = Math.min(rect.width, rect.height);
+      
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      
+      ctx.resetTransform?.();
+      ctx.scale(dpr, dpr);
+
+      drawStereonet();
+      drawBubbleLevel();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function computeGroupAverage(groupId) {
+      const records = state.records.filter(r => r.group === groupId);
+      if (records.length === 0) return null;
+
+      let sumX = 0, sumY = 0, sumZ = 0;
+
+      records.forEach(r => {
+        const poleTrendRad = ((r.dipDir + 180) % 360) * (Math.PI / 180);
+        const polePlungeRad = (90 - r.dip) * (Math.PI / 180);
+
+        const x = Math.sin(poleTrendRad) * Math.cos(polePlungeRad);
+        const y = Math.cos(poleTrendRad) * Math.cos(polePlungeRad);
+        const z = -Math.sin(polePlungeRad);
+
+        sumX += x;
+        sumY += y;
+        sumZ += z;
+      });
+
+      const R_len = Math.hypot(sumX, sumY, sumZ);
+      if (R_len === 0) return null;
+
+      const avgX = sumX / R_len;
+      const avgY = sumY / R_len;
+      const avgZ = sumZ / R_len;
+
+      const plungeRad = Math.asin(Math.abs(avgZ));
+      const avgPolePlunge = plungeRad * (180 / Math.PI);
+      let avgPoleTrend = (Math.atan2(avgX, avgY) * (180 / Math.PI) + 360) % 360;
+
+      const avgDip = 90 - avgPolePlunge;
+      const avgDipDir = (avgPoleTrend + 180) % 360;
+      const avgStrike = (avgDipDir - 90 + 360) % 360;
+
+      return {
+        count: records.length,
+        poleTrend: avgPoleTrend,
+        polePlunge: avgPolePlunge,
+        strike: avgStrike,
+        dip: avgDip,
+        dipDir: avgDipDir
+      };
+    }
+
+    function drawStereonet() {
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.width / dpr;
+      const height = canvas.height / dpr;
+      if (width === 0 || height === 0) return;
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const R = (width / 2) - 18;
+      if (R <= 10) return;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Primitive background
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fillStyle = '#090f1d';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.stroke();
+
+      // Dip guide rings
+      ctx.save();
+      ctx.setLineDash([2, 4]);
+      ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
+      [20, 40, 60, 80].forEach(dipStep => {
+        const psi = dipStep * (Math.PI / 180);
+        const rDip = R * Math.SQRT2 * Math.sin(psi / 2);
+        ctx.beginPath();
+        ctx.arc(cx, cy, rDip, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // Axes
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(71, 85, 105, 0.55)';
+      ctx.lineWidth = 1;
+      ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R);
+      ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy);
+      ctx.stroke();
+
+      // Ticks & N/E/S/W labels
+      ctx.save();
+      ctx.font = 'bold 10px var(--font-sans)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let deg = 0; deg < 360; deg += 10) {
+        const rad = deg * (Math.PI / 180);
+        const isMajor = deg % 30 === 0;
+        const tickLen = isMajor ? 5 : 2.5;
+        const x1 = cx + (R - tickLen) * Math.sin(rad);
+        const y1 = cy - (R - tickLen) * Math.cos(rad);
+        const x2 = cx + R * Math.sin(rad);
+        const y2 = cy - R * Math.cos(rad);
+
+        ctx.beginPath();
+        ctx.strokeStyle = isMajor ? '#64748b' : '#334155';
+        ctx.lineWidth = isMajor ? 1.5 : 1;
+        ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText('N', cx, cy - R - 9);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('E', cx + R + 9, cy);
+      ctx.fillText('S', cx, cy + R + 9);
+      ctx.fillText('W', cx - R - 9, cy);
+      ctx.restore();
+
+      // 1. Draw Recorded Planes
+      state.records.forEach((rec) => {
+        if (!state.groupVisible[rec.group]) return;
+
+        const groupCfg = groups[rec.group] || { color: '#94a3b8', label: rec.group };
+        const isHovered = (rec.id === hoveredRecordId);
+
+        if (state.showGreatCircles) {
+          drawGreatCircle(cx, cy, R, rec.strike, rec.dip, groupCfg.color + (isHovered ? 'ff' : '77'), isHovered ? 2 : 1.2);
+        }
+
+        if (state.showPoles) {
+          const pole = getPoleProjection(R, rec.dipDir, rec.dip);
+          const px = cx + pole.x;
+          const py = cy + pole.y;
+
+          ctx.beginPath();
+          ctx.arc(px, py, isHovered ? 6 : 4, 0, Math.PI * 2);
+          ctx.fillStyle = groupCfg.color;
+          ctx.fill();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+
+          ctx.fillStyle = isHovered ? '#fbbf24' : 'rgba(226, 232, 240, 0.75)';
+          ctx.font = '8px monospace';
+          ctx.fillText(`${(groupCfg.label || 'G')[0]}${rec.id}`, px + 7, py - 3);
+        }
+      });
+
+      // 2. Draw Group Means
+      Object.keys(groups).forEach(gId => {
+        if (!state.groupVisible[gId]) return;
+        const avg = computeGroupAverage(gId);
+        if (avg && avg.count >= 2) {
+          const groupCfg = groups[gId];
+          
+          if (state.showGreatCircles) {
+            ctx.save();
+            ctx.setLineDash([5, 4]);
+            drawGreatCircle(cx, cy, R, avg.strike, avg.dip, groupCfg.color, 2.2);
+            ctx.restore();
+          }
+
+          if (state.showPoles) {
+            const mp = getPoleProjection(R, avg.dipDir, avg.dip);
+            const mx = cx + mp.x;
+            const my = cy + mp.y;
+
+            ctx.save();
+            ctx.fillStyle = groupCfg.color;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(mx, my - 6);
+            ctx.lineTo(mx + 6, my);
+            ctx.lineTo(mx, my + 6);
+            ctx.lineTo(mx - 6, my);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      });
+
+      // 3. Draw Live (Current) Orientation
+      if (state.current.dip >= 0) {
+        const activeGroupCfg = groups[state.activeGroup] || { color: '#06b6d4', label: 'Y面' };
+
+        if (state.showGreatCircles) {
+          drawGreatCircle(cx, cy, R, state.current.strike, state.current.dip, activeGroupCfg.color, 2.4);
+        }
+
+        if (state.showPoles) {
+          const livePole = getPoleProjection(R, state.current.dipDir, state.current.dip);
+          const lx = cx + livePole.x;
+          const ly = cy + livePole.y;
+
+          ctx.beginPath();
+          ctx.arc(lx, ly, 8, 0, Math.PI * 2);
+          ctx.fillStyle = activeGroupCfg.color + '44';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(lx, ly, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = activeGroupCfg.color;
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+        }
+      }
+    }
+
+    function drawGreatCircle(cx, cy, R, strikeDeg, dipDeg, strokeStyle, lineWidth) {
+      if (dipDeg === 0) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+        return;
+      }
+
+      const sRad = strikeDeg * (Math.PI / 180);
+      const dRad = dipDeg * (Math.PI / 180);
+      const ddRad = ((strikeDeg + 90) % 360) * (Math.PI / 180);
+
+      const uStrike = { x: Math.sin(sRad), y: Math.cos(sRad), z: 0 };
+      const uDip = {
+        x: Math.sin(ddRad) * Math.cos(dRad),
+        y: Math.cos(ddRad) * Math.cos(dRad),
+        z: -Math.sin(dRad)
+      };
+
+      ctx.beginPath();
+      let hasStarted = false;
+      const steps = 90;
+
+      for (let i = 0; i <= steps; i++) {
+        const theta = (i / steps) * Math.PI;
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+
+        const vx = cosT * uStrike.x + sinT * uDip.x;
+        const vy = cosT * uStrike.y + sinT * uDip.y;
+        const vz = cosT * uStrike.z + sinT * uDip.z;
+
+        const dotNadir = -vz;
+        const psi = Math.acos(Math.max(-1, Math.min(1, dotNadir)));
+        const r = R * Math.SQRT2 * Math.sin(psi / 2);
+        const azimuth = Math.atan2(vx, vy);
+
+        const px = cx + r * Math.sin(azimuth);
+        const py = cy - r * Math.cos(azimuth);
+
+        if (!hasStarted) {
+          ctx.moveTo(px, py);
+          hasStarted = true;
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+
+      ctx.strokeStyle = strokeStyle;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+    }
+
+    function updateCompass(headingDeg) {
+      const roseEl = document.getElementById('compass-rose');
+      const textEl = document.getElementById('compass-heading');
+      if (!roseEl || !textEl) return;
+      if (headingDeg === null) {
+        roseEl.setAttribute('transform', 'rotate(0)');
+        textEl.textContent = '---°';
+        return;
+      }
+      const trueHeading = ((headingDeg + state.declination) % 360 + 360) % 360;
+      roseEl.setAttribute('transform', `rotate(${(-trueHeading).toFixed(1)})`);
+      textEl.textContent = `${String(Math.round(trueHeading) % 360).padStart(3, '0')}°`;
+    }
+
+    function updateFromSensors(alpha, beta, gamma) {
+      if (state.isSimMode) return;
+
+      const degToRad = Math.PI / 180;
+      const a = (alpha || 0) * degToRad;
+      const b = (beta || 0) * degToRad;
+      const g = (gamma || 0) * degToRad;
+
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const cb = Math.cos(b), sb = Math.sin(b);
+      const cg = Math.cos(g), sg = Math.sin(g);
+
+      const E_raw = -(ca * sg + cg * sa * sb);
+      const N_raw = -(sa * sg - ca * cg * sb);
+      const U_raw = -cb * cg;
+
+      let E_down, N_down, U_down;
+      if (U_raw > 0) {
+        E_down = -E_raw;
+        N_down = -N_raw;
+        U_down = -U_raw;
+      } else {
+        E_down = E_raw;
+        N_down = N_raw;
+        U_down = U_raw;
+      }
+
+      if (Math.abs(cb) > 0.5) {
+        updateCompass((Math.atan2(-sa * cb, ca * cb) / degToRad + 360) % 360);
+      } else {
+        updateCompass((Math.atan2(E_raw, N_raw) / degToRad + 360) % 360);
+      }
+
+      const dipRad = Math.acos(Math.max(0, Math.min(1, Math.abs(U_down))));
+      const dipRaw = dipRad / degToRad;
+
+      let magDipDir = (Math.atan2(E_down, N_down) / degToRad + 360) % 360;
+      let trueDipDir = ((magDipDir + state.declination) % 360 + 360) % 360;
+      let strikeRHR = ((trueDipDir - 90) % 360 + 360) % 360;
+
+      applyFilteredMeasurement(strikeRHR, dipRaw, trueDipDir, beta, gamma);
+    }
+
+    function applyFilteredMeasurement(targetStrike, targetDip, targetDipDir, beta, gamma) {
+      const alpha = state.isSimMode ? 1.0 : state.filterAlpha;
+
+      function smoothAngle(curr, target, a) {
+        let diff = (target - curr + 540) % 360 - 180;
+        return ((curr + diff * a) % 360 + 360) % 360;
+      }
+
+      state.current.strike = smoothAngle(state.current.strike, targetStrike, alpha);
+      state.current.dip = state.current.dip + (targetDip - state.current.dip) * alpha;
+      state.current.dipDir = smoothAngle(state.current.dipDir, targetDipDir, alpha);
+      state.current.beta = beta !== undefined ? beta : 0;
+      state.current.gamma = gamma !== undefined ? gamma : 0;
+
+      updateHUD();
+      drawStereonet();
+      drawBubbleLevel();
+    }
+
+    function updateHUD() {
+      const strikeRound = Math.round(state.current.strike);
+      const dipRound = Math.round(state.current.dip);
+      const dipDirRound = Math.round(state.current.dipDir);
+
+      const poleTrend = (dipDirRound + 180) % 360;
+      const polePlunge = 90 - dipRound;
+
+      document.getElementById('disp-strike').textContent = formatAngle3(strikeRound);
+      document.getElementById('disp-strike-quadrant').textContent = getQuadrantStrike(strikeRound);
+
+      document.getElementById('disp-dip').textContent = String(dipRound).padStart(2, '0');
+      document.getElementById('disp-dipdir').textContent = formatAngle3(dipDirRound);
+
+      const dir8 = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(dipDirRound / 45) % 8];
+      document.getElementById('disp-dip-notation').textContent = `${dipRound}°${dir8}`;
+      document.getElementById('disp-pole-trend').textContent = formatAngle3(poleTrend);
+    }
+
+    const btnSensorPerm = document.getElementById('btn-sensor-perm');
+    const sensorDot = document.getElementById('sensor-dot');
+    const sensorText = document.getElementById('sensor-text');
+
+    function onDeviceOrientation(e) {
+      if (e.beta === null && e.gamma === null) return; // センサーなし端末では無視
+      if (!state.sensorActive && !state.isSimMode) {
+        state.sensorActive = true;
+        sensorDot.className = 'w-2 h-2 rounded-full bg-emerald-400 live-pulse';
+        sensorText.textContent = '計測中';
+        btnSensorPerm.classList.add('hidden');
+      }
+
+      let alpha = e.alpha || 0;
+      if (typeof e.webkitCompassHeading !== 'undefined') {
+        alpha = (360 - e.webkitCompassHeading + 360) % 360;
+      }
+
+      updateFromSensors(alpha, e.beta, e.gamma);
+    }
+
+    let orientationListening = false;
+
+    function attachOrientationListeners() {
+      if (orientationListening) return;
+      orientationListening = true;
+      window.addEventListener('deviceorientationabsolute', onDeviceOrientation, true);
+      window.addEventListener('deviceorientation', onDeviceOrientation, true);
+    }
+
+    /* センサーを開始。許可が必要な端末(iOS)でも、最初のタップで自動的に要求する */
+    async function startSensors(fromUserGesture) {
+      if (orientationListening) return true;
+
+      const needsPermission = typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function';
+
+      if (!needsPermission) {
+        attachOrientationListeners();
+        return true;
+      }
+
+      try {
+        const perm = await DeviceOrientationEvent.requestPermission();
+        if (perm === 'granted') {
+          attachOrientationListeners();
+          return true;
+        }
+        if (fromUserGesture) showToast('センサー利用が拒否されました', 'error');
+        return false;
+      } catch (err) {
+        // ユーザー操作なしでは要求できない → 最初のタップまで待つ
+        if (fromUserGesture) showToast('センサー許可エラー: ' + err.message, 'error');
+        return false;
+      }
+    }
+
+    function armFirstTapSensorStart() {
+      const handler = async () => {
+        document.removeEventListener('touchend', handler, true);
+        document.removeEventListener('click', handler, true);
+        await startSensors(true);
+      };
+      document.addEventListener('touchend', handler, true);
+      document.addEventListener('click', handler, true);
+    }
+
+    btnSensorPerm.addEventListener('click', async () => {
+      if (state.sensorActive) {
+        showToast('センサーは既に稼働しています');
+        return;
+      }
+      await startSensors(true);
+    });
+
+    const btnToggleSim = document.getElementById('btn-toggle-sim');
+    const panelSim = document.getElementById('panel-sim');
+    const sliderSimStrike = document.getElementById('slider-sim-strike');
+    const sliderSimDip = document.getElementById('slider-sim-dip');
+    const simStrikeVal = document.getElementById('sim-strike-val');
+    const simDipVal = document.getElementById('sim-dip-val');
+
+    btnToggleSim.addEventListener('click', () => {
+      state.isSimMode = !state.isSimMode;
+      panelSim.classList.toggle('hidden', !state.isSimMode);
+      btnToggleSim.classList.toggle('bg-amber-950', state.isSimMode);
+      btnToggleSim.classList.toggle('border-amber-500', state.isSimMode);
+
+      if (state.isSimMode) {
+        sensorDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        sensorText.textContent = '手動シミュレータ動作中';
+        updateSimulator();
+      } else {
+        sensorDot.className = 'w-2 h-2 rounded-full bg-slate-600';
+        sensorText.textContent = state.sensorActive ? '計測中' : '待機中';
+      }
+    });
+
+    function updateSimulator() {
+      const strike = parseFloat(sliderSimStrike.value);
+      const dip = parseFloat(sliderSimDip.value);
+      simStrikeVal.textContent = `${formatAngle3(strike)}°`;
+      simDipVal.textContent = `${Math.round(dip)}°`;
+
+      const dipDir = (strike + 90) % 360;
+      const beta = dip * 0.7;
+      const gamma = dip * 0.5;
+
+      applyFilteredMeasurement(strike, dip, dipDir, beta, gamma);
+    }
+
+    sliderSimStrike.addEventListener('input', updateSimulator);
+    sliderSimDip.addEventListener('input', updateSimulator);
+
+    const groupDescText = document.getElementById('group-desc-text');
+    const btnRecordGroupName = document.getElementById('btn-record-group-name');
+    const labelClearActiveGroup = document.getElementById('label-clear-active-group');
+    const btnClearGroupRecords = document.getElementById('btn-clear-group-records');
+    const btnClearActiveGroup = document.getElementById('btn-clear-active-group');
+
+    function renderGroupSelectors() {
+      const container = document.getElementById('group-selector-container');
+      container.innerHTML = '';
+
+      Object.values(groups).forEach(g => {
+        const isActive = (state.activeGroup === g.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'group-btn flex flex-col items-center justify-center py-1.5 px-2 rounded-lg border text-center transition flex-1 min-w-[56px] flex-shrink-0';
+        btn.setAttribute('data-group', g.id);
+
+        if (isActive) {
+          btn.style.backgroundColor = `${g.color}25`;
+          btn.style.borderColor = g.color;
+          btn.style.color = g.color;
+          btn.style.boxShadow = `0 0 0 1px ${g.color}`;
+        } else {
+          btn.style.backgroundColor = '#020617';
+          btn.style.borderColor = '#1e293b';
+          btn.style.color = '#94a3b8';
+          btn.style.boxShadow = 'none';
+        }
+
+        btn.innerHTML = `
+          <span class="text-xs font-bold font-mono truncate max-w-[65px]">${g.label}</span>
+          <span class="text-[9px] font-medium scale-90 sm:scale-100 truncate max-w-[65px]" style="color: ${isActive ? g.color : '#64748b'}">${g.sub || '測定'}</span>
+        `;
+
+        btn.addEventListener('click', () => {
+          setActiveGroup(g.id);
+        });
+
+        container.appendChild(btn);
+      });
+    }
+
+    function renderGroupFilters() {
+      const list = document.getElementById('group-filter-list');
+      list.innerHTML = '<span class="text-[10px] text-slate-400 font-semibold">表示面:</span>';
+
+      Object.values(groups).forEach(g => {
+        const isChecked = state.groupVisible[g.id] !== false;
+        const label = document.createElement('label');
+        label.className = 'flex items-center gap-0.5 text-[10px] cursor-pointer';
+        label.style.color = g.color;
+
+        const count = state.records.filter(r => r.group === g.id).length;
+
+        label.innerHTML = `
+          <input type="checkbox" data-group-filter="${g.id}" ${isChecked ? 'checked' : ''} class="rounded scale-90" style="accent-color: ${g.color};">
+          <span>${g.label} (<span id="count-group-${g.id}">${count}</span>)</span>
+        `;
+
+        const chk = label.querySelector('input');
+        chk.addEventListener('change', (e) => {
+          state.groupVisible[g.id] = e.target.checked;
+          drawStereonet();
+        });
+
+        list.appendChild(label);
+      });
+    }
+
+    function setActiveGroup(groupId) {
+      if (!groups[groupId]) {
+        groupId = Object.keys(groups)[0] || 'Y';
+      }
+      state.activeGroup = groupId;
+      const g = groups[groupId];
+
+      renderGroupSelectors();
+
+      groupDescText.textContent = g.desc || `${g.label} (${g.sub || '測定面'})`;
+      groupDescText.style.color = g.color;
+      btnRecordGroupName.textContent = g.label;
+      if (labelClearActiveGroup) labelClearActiveGroup.textContent = `${g.label}消去`;
+      if (btnClearGroupRecords) btnClearGroupRecords.textContent = `${g.label}消去`;
+
+      drawStereonet();
+    }
+
+    const toggleShowPoles = document.getElementById('toggle-show-poles');
+    const toggleShowGC = document.getElementById('toggle-show-gc');
+
+    toggleShowPoles.addEventListener('change', (e) => {
+      state.showPoles = e.target.checked;
+      drawStereonet();
+    });
+
+    toggleShowGC.addEventListener('change', (e) => {
+      state.showGreatCircles = e.target.checked;
+      drawStereonet();
+    });
+
+    const btnRecord = document.getElementById('btn-record');
+    const recordContainer = document.getElementById('record-items-container');
+    const emptyNotice = document.getElementById('empty-record-notice');
+    const listCountBadge = document.getElementById('record-list-count');
+    const inputNote = document.getElementById('input-note');
+
+    function loadSavedRecords() {
+      try {
+        const saved = localStorage.getItem('geostereo_records_v4');
+        if (saved) {
+          state.records = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Storage read failed', e);
+      }
+      renderRecordList();
+      updateGroupCounts();
+      drawStereonet();
+    }
+
+    function saveRecords() {
+      try {
+        localStorage.setItem('geostereo_records_v4', JSON.stringify(state.records));
+      } catch (e) {
+        console.warn('Storage write failed', e);
+      }
+      updateGroupCounts();
+    }
+
+    function updateGroupCounts() {
+      Object.keys(groups).forEach(gid => {
+        const countEl = document.getElementById(`count-group-${gid}`);
+        if (countEl) {
+          const cnt = state.records.filter(r => r.group === gid).length;
+          countEl.textContent = cnt;
+        }
+      });
+    }
+
+    btnRecord.addEventListener('click', () => {
+      try {
+        if (navigator.vibrate) navigator.vibrate(50);
+      } catch (e) {}
+
+      const strike = Math.round(state.current.strike);
+      const dip = Math.round(state.current.dip);
+      const dipDir = Math.round(state.current.dipDir);
+      const poleTrend = (dipDir + 180) % 360;
+      const polePlunge = 90 - dip;
+      const g = groups[state.activeGroup] || { label: state.activeGroup };
+      const note = inputNote.value.trim();
+
+      const recordItem = {
+        id: state.records.length + 1,
+        timestamp: new Date().toISOString(),
+        timeStr: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        group: state.activeGroup,
+        groupLabel: g.label,
+        strike: strike,
+        quadrant: getQuadrantStrike(strike),
+        dip: dip,
+        dipDir: dipDir,
+        cardinal: getCardinalDirection(dipDir),
+        poleTrend: poleTrend,
+        polePlunge: polePlunge,
+        declination: state.declination,
+        note: note
+      };
+
+      state.records.push(recordItem);
+      saveRecords();
+      renderRecordList();
+      drawStereonet();
+
+      showToast(`[${g.label}] #${recordItem.id}: S=${formatAngle3(strike)}° D=${dip}° を記録`);
+    });
+
+    function renderRecordList() {
+      listCountBadge.textContent = state.records.length;
+
+      if (state.records.length === 0) {
+        emptyNotice.classList.remove('hidden');
+        recordContainer.innerHTML = '';
+        recordContainer.appendChild(emptyNotice);
+        return;
+      }
+
+      emptyNotice.classList.add('hidden');
+      recordContainer.innerHTML = '';
+
+      [...state.records].reverse().forEach(rec => {
+        const g = groups[rec.group] || { color: '#94a3b8', label: rec.groupLabel || rec.group };
+        const card = document.createElement('div');
+        card.className = 'py-2.5 px-2.5 flex items-center justify-between hover:bg-slate-800/40 rounded transition';
+        card.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-10 h-6 rounded flex items-center justify-center font-mono text-xs font-bold px-1" style="background-color: ${g.color}25; border: 1px solid ${g.color}; color: ${g.color};">
+              ${g.label}
+            </span>
+            <div class="flex flex-col">
+              <div class="font-mono text-slate-200 font-semibold flex items-center gap-2.5 text-sm">
+                <span>#${rec.id}</span>
+                <span><span class="text-slate-400 text-[10px]">S:</span>${formatAngle3(rec.strike)}°</span>
+                <span><span class="text-slate-400 text-[10px]">D:</span>${rec.dip}° ${rec.cardinal}</span>
+                <span class="text-[10px] text-slate-400 font-normal">(${rec.quadrant})</span>
+              </div>
+              <div class="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                <span>極:${formatAngle3(rec.poleTrend)}°/${rec.polePlunge}°</span>
+                <span>${rec.timeStr}</span>
+                ${rec.note ? `<span class="text-slate-300 bg-slate-800 px-1 rounded">${rec.note}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <button data-id="${rec.id}" class="btn-delete-rec text-slate-500 hover:text-red-400 p-1 rounded">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        `;
+        recordContainer.appendChild(card);
+      });
+
+      document.querySelectorAll('.btn-delete-rec').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt(e.currentTarget.getAttribute('data-id'), 10);
+          deleteRecord(id);
+        });
+      });
+    }
+
+    function deleteRecord(id) {
+      state.records = state.records.filter(r => r.id !== id);
+      state.records.forEach((r, idx) => r.id = idx + 1);
+      saveRecords();
+      renderRecordList();
+      drawStereonet();
+      showToast('測定データを削除しました');
+    }
+
+    const btnExportCSV = document.getElementById('btn-export-csv');
+
+    btnExportCSV.addEventListener('click', () => {
+      if (state.records.length === 0) {
+        showToast('エクスポートする記録がありません', 'error');
+        return;
+      }
+
+      const headers = ['ID', 'Group', 'Group_Name', 'Timestamp', 'Strike_RHR_deg', 'Strike_Quadrant', 'Dip_deg', 'DipDir_deg', 'Pole_Trend_deg', 'Pole_Plunge_deg', 'DipDir_Cardinal', 'Declination_deg', 'Note'];
+      const rows = state.records.map(r => {
+        const gName = (groups[r.group] && groups[r.group].label) || r.groupLabel || r.group;
+        return [
+          r.id,
+          `"${r.group}"`,
+          `"${gName}"`,
+          `"${r.timestamp}"`,
+          r.strike,
+          `"${r.quadrant}"`,
+          r.dip,
+          r.dipDir,
+          r.poleTrend,
+          r.polePlunge,
+          `"${r.cardinal}"`,
+          r.declination,
+          `"${(r.note || '').replace(/"/g, '""')}"`
+        ];
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `GeoStereo_Made_by_Yuta_${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast('CSVファイルを書き出しました');
+    });
+
+    const tooltip = document.getElementById('stereonet-tooltip');
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const cx = (canvas.width / dpr) / 2;
+      const cy = (canvas.height / dpr) / 2;
+      const R = (canvas.width / dpr) / 2 - 18;
+
+      let nearest = null;
+      let minDist = 22;
+
+      state.records.forEach(rec => {
+        if (!state.groupVisible[rec.group]) return;
+        const p = getPoleProjection(R, rec.dipDir, rec.dip);
+        const px = cx + p.x;
+        const py = cy + p.y;
+        const dist = Math.hypot(clickX - px, clickY - py);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = rec;
+        }
+      });
+
+      if (nearest) {
+        hoveredRecordId = nearest.id;
+        const g = groups[nearest.group] || { color: '#94a3b8', label: nearest.groupLabel || nearest.group };
+        tooltip.innerHTML = `<span style="color: ${g.color}; font-weight: bold;">[${g.label}] #${nearest.id}</span>: S <span class="text-white">${formatAngle3(nearest.strike)}°</span> / D <span class="text-white">${nearest.dip}° ${nearest.cardinal}</span> | 極: ${formatAngle3(nearest.poleTrend)}°/${nearest.polePlunge}° ${nearest.note ? ' - ' + nearest.note : ''}`;
+      } else {
+        hoveredRecordId = null;
+        tooltip.textContent = 'プロットされた極点または大円をタップで詳細表示';
+      }
+      drawStereonet();
+    });
+
+    const btnShowStats = document.getElementById('btn-show-stats');
+    const statsModal = document.getElementById('stats-modal');
+    const statsContentList = document.getElementById('stats-content-list');
+    const btnCloseStats = document.getElementById('btn-close-stats');
+    const btnCloseStatsFooter = document.getElementById('btn-close-stats-footer');
+
+    function renderStatsContent() {
+      statsContentList.innerHTML = '';
+      Object.keys(groups).forEach(gId => {
+        const g = groups[gId];
+        const avg = computeGroupAverage(gId);
+
+        const card = document.createElement('div');
+        card.className = `p-2 rounded-lg border bg-slate-950/80 flex flex-col gap-1`;
+        card.style.borderColor = `${g.color}66`;
+
+        if (avg) {
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold flex items-center gap-1.5" style="color: ${g.color}">
+                <span class="w-2 h-2 rounded-full" style="background-color: ${g.color}"></span>
+                ${g.label} (${g.sub || ''})
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-slate-400 text-[10px]">${avg.count} 点測定</span>
+                <button data-group-del="${gId}" class="btn-group-stats-del text-[10px] text-rose-400 hover:text-rose-300 hover:underline px-1 py-0.5 rounded bg-rose-950/40 border border-rose-900/60 transition">
+                  消去
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-1 text-[11px] font-mono mt-0.5">
+              <div>平均走向: <span class="text-white font-bold">${formatAngle3(avg.strike)}°</span></div>
+              <div>平均傾斜: <span class="text-white font-bold">${Math.round(avg.dip)}°</span></div>
+              <div class="col-span-2 text-[10px] text-slate-400">平均極 (Trend/Plunge): ${formatAngle3(avg.poleTrend)}° / ${Math.round(avg.polePlunge)}°</div>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-slate-500">
+              <span class="font-bold flex items-center gap-1.5" style="color: ${g.color}aa">
+                <span class="w-2 h-2 rounded-full" style="background-color: ${g.color}88"></span>
+                ${g.label} (${g.sub || ''})
+              </span>
+              <span class="font-mono text-[10px]">測定なし (0点)</span>
+            </div>
+          `;
+        }
+        statsContentList.appendChild(card);
+      });
+
+      statsContentList.querySelectorAll('.btn-group-stats-del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const targetGroup = e.currentTarget.getAttribute('data-group-del');
+          deleteGroupRecords(targetGroup);
+        });
+      });
+    }
+
+    btnShowStats.addEventListener('click', () => {
+      renderStatsContent();
+      statsModal.classList.remove('hidden');
+    });
+
+    btnCloseStats.addEventListener('click', () => statsModal.classList.add('hidden'));
+    btnCloseStatsFooter.addEventListener('click', () => statsModal.classList.add('hidden'));
+
+    /* Group Management Modal (追加 / 編集) */
+    const groupModal = document.getElementById('group-modal');
+    const groupModalTitle = document.getElementById('group-modal-title');
+    const groupForm = document.getElementById('group-form');
+    const inputGroupLabel = document.getElementById('input-group-label');
+    const inputGroupSub = document.getElementById('input-group-sub');
+    const inputGroupColor = document.getElementById('input-group-color');
+    const labelSelectedColor = document.getElementById('label-selected-color');
+    const inputGroupDesc = document.getElementById('input-group-desc');
+    const btnDeleteGroupDef = document.getElementById('btn-delete-group-def');
+    const btnAddGroup = document.getElementById('btn-add-group');
+    const btnEditActiveGroup = document.getElementById('btn-edit-active-group');
+    const btnCloseGroupModal = document.getElementById('btn-close-group-modal');
+    const btnCancelGroupModal = document.getElementById('btn-cancel-group-modal');
+    const paletteContainer = document.getElementById('palette-container');
+
+    let currentEditingGroupId = null;
+
+    PALETTE_COLORS.forEach(c => {
+      const pBtn = document.createElement('button');
+      pBtn.type = 'button';
+      pBtn.className = 'w-6 h-6 rounded-full border border-slate-700 hover:scale-110 transition';
+      pBtn.style.backgroundColor = c;
+      pBtn.addEventListener('click', () => {
+        inputGroupColor.value = c;
+        labelSelectedColor.textContent = c;
+      });
+      paletteContainer.appendChild(pBtn);
+    });
+
+    inputGroupColor.addEventListener('input', (e) => {
+      labelSelectedColor.textContent = e.target.value;
+    });
+
+    function openGroupModal(groupId = null) {
+      currentEditingGroupId = groupId;
+      const isEdit = groupId !== null && groups[groupId];
+
+      if (isEdit) {
+        const g = groups[groupId];
+        groupModalTitle.innerHTML = `
+          <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          グループの編集・名前変更
+        `;
+        inputGroupLabel.value = g.label;
+        inputGroupSub.value = g.sub || '';
+        inputGroupDesc.value = g.desc || '';
+        inputGroupColor.value = g.color || '#06b6d4';
+        labelSelectedColor.textContent = g.color || '#06b6d4';
+
+        if (Object.keys(groups).length > 1) {
+          btnDeleteGroupDef.classList.remove('hidden');
+        } else {
+          btnDeleteGroupDef.classList.add('hidden');
+        }
+      } else {
+        groupModalTitle.innerHTML = `
+          <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          測定面グループの追加
+        `;
+        inputGroupLabel.value = '';
+        inputGroupSub.value = '';
+        inputGroupDesc.value = '';
+
+        const usedColors = Object.values(groups).map(g => g.color.toLowerCase());
+        const unusedColor = PALETTE_COLORS.find(c => !usedColors.includes(c.toLowerCase())) || PALETTE_COLORS[Math.floor(Math.random() * PALETTE_COLORS.length)];
+        inputGroupColor.value = unusedColor;
+        labelSelectedColor.textContent = unusedColor;
+
+        btnDeleteGroupDef.classList.add('hidden');
+      }
+
+      groupModal.classList.remove('hidden');
+      setTimeout(() => inputGroupLabel.focus(), 50);
+    }
+
+    btnAddGroup.addEventListener('click', () => openGroupModal(null));
+    btnEditActiveGroup.addEventListener('click', () => openGroupModal(state.activeGroup));
+
+    btnCloseGroupModal.addEventListener('click', () => groupModal.classList.add('hidden'));
+    btnCancelGroupModal.addEventListener('click', () => groupModal.classList.add('hidden'));
+
+    groupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const label = inputGroupLabel.value.trim();
+      const sub = inputGroupSub.value.trim();
+      const desc = inputGroupDesc.value.trim();
+      const color = inputGroupColor.value;
+
+      if (!label) {
+        showToast('グループ名を入力してください', 'error');
+        return;
+      }
+
+      if (currentEditingGroupId && groups[currentEditingGroupId]) {
+        const g = groups[currentEditingGroupId];
+        g.label = label;
+        g.sub = sub;
+        g.desc = desc || `${label} (${sub || '測定'})`;
+        g.color = color;
+
+        // 過去レコードの表示名を同期更新
+        state.records.forEach(r => {
+          if (r.group === currentEditingGroupId) {
+            r.groupLabel = label;
+          }
+        });
+        saveRecords();
+        showToast(`グループ「${label}」を更新しました`);
+      } else {
+        const newId = 'grp_' + Date.now().toString(36);
+        groups[newId] = {
+          id: newId,
+          label: label,
+          sub: sub,
+          desc: desc || `${label} (${sub || '測定'})`,
+          color: color
+        };
+        state.groupVisible[newId] = true;
+        state.activeGroup = newId;
+        showToast(`グループ「${label}」を追加しました`);
+      }
+
+      saveGroups();
+      renderGroupSelectors();
+      renderGroupFilters();
+      renderRecordList();
+      setActiveGroup(state.activeGroup);
+      drawStereonet();
+      groupModal.classList.add('hidden');
+    });
+
+    btnDeleteGroupDef.addEventListener('click', () => {
+      if (!currentEditingGroupId || !groups[currentEditingGroupId]) return;
+      const targetId = currentEditingGroupId;
+      const g = groups[targetId];
+
+      if (Object.keys(groups).length <= 1) {
+        showToast('グループをすべて削除することはできません', 'error');
+        return;
+      }
+
+      const relatedCount = state.records.filter(r => r.group === targetId).length;
+      const msg = relatedCount > 0 
+        ? `グループ「${g.label}」と、保存済みの測定データ（${relatedCount}件）を完全に削除しますか？`
+        : `グループ「${g.label}」を削除しますか？`;
+
+      openConfirmModal(
+        `グループ「${g.label}」の削除`,
+        msg,
+        () => {
+          delete groups[targetId];
+          delete state.groupVisible[targetId];
+          state.records = state.records.filter(r => r.group !== targetId);
+          state.records.forEach((r, idx) => r.id = idx + 1);
+
+          if (state.activeGroup === targetId) {
+            state.activeGroup = Object.keys(groups)[0];
+          }
+
+          saveGroups();
+          saveRecords();
+          renderGroupSelectors();
+          renderGroupFilters();
+          renderRecordList();
+          setActiveGroup(state.activeGroup);
+          drawStereonet();
+          groupModal.classList.add('hidden');
+          showToast(`グループ「${g.label}」を削除しました`);
+        }
+      );
+    });
+
+    // Guide Modal
+    const btnOpenGuide = document.getElementById('btn-open-guide');
+    const guideModal = document.getElementById('guide-modal');
+    const btnCloseGuide = document.getElementById('btn-close-guide');
+    const btnCloseGuideFooter = document.getElementById('btn-close-guide-footer');
+
+    btnOpenGuide.addEventListener('click', () => guideModal.classList.remove('hidden'));
+    btnCloseGuide.addEventListener('click', () => guideModal.classList.add('hidden'));
+    btnCloseGuideFooter.addEventListener('click', () => guideModal.classList.add('hidden'));
+
+    // NOAA WMM & GPS
+    const inputDeclination = document.getElementById('input-declination');
+    const btnGpsDeclination = document.getElementById('btn-gps-declination');
+    const gpsDeclinationStatus = document.getElementById('gps-declination-status');
+
+    function setDeclinationValue(value, sourceText = '') {
+      const val = Number(value);
+      if (!Number.isFinite(val)) throw new Error('偏角値が不正です。');
+      state.declination = val;
+      inputDeclination.value = val.toFixed(1);
+      try { localStorage.setItem('geostereo_declination', String(val)); } catch (_) {}
+      gpsDeclinationStatus.textContent = sourceText || `手動偏角: ${val >= 0 ? '+' : ''}${val.toFixed(1)}°（東偏＋ / 西偏−）`;
+      if (state.isSimMode) updateSimulator();
+      else drawStereonet();
+    }
+
+    function loadSavedDeclination() {
+      try {
+        const saved = localStorage.getItem('geostereo_declination');
+        if (saved !== null && Number.isFinite(parseFloat(saved))) {
+          const v = parseFloat(saved);
+          setDeclinationValue(v, `保存済み偏角: ${v >= 0 ? '+' : ''}${v.toFixed(1)}°（オフラインでも使用）`);
+        }
+      } catch (_) {}
+    }
+
+    const NOAA_KEYS = ['zNEw7'];
+    const NOAA_BASE = 'https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination';
+
+    function parseNoaaDeclination(text) {
+      try {
+        const j = JSON.parse(text);
+        const d = j && j.result && j.result[0] && parseFloat(j.result[0].declination);
+        if (Number.isFinite(d)) return d;
+      } catch (_) {}
+
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hi = lines.findIndex(l => /declination/i.test(l));
+      if (hi >= 0 && lines[hi + 1]) {
+        const headers = lines[hi].split(',').map(h => h.trim().toLowerCase());
+        const row = lines[hi + 1].split(',').map(v => v.trim());
+        const idx = headers.findIndex(h => h.includes('declination'));
+        const n = parseFloat(row[idx]);
+        if (idx >= 0 && Number.isFinite(n)) return n;
+      }
+      if (lines.length) {
+        const row = lines[lines.length - 1].split(',').map(v => v.trim());
+        for (const c of [row[4], row[3], row[5]]) {
+          const n = parseFloat(c);
+          if (Number.isFinite(n) && Math.abs(n) <= 180) return n;
+        }
+      }
+      throw new Error('偏角データを解析できませんでした');
+    }
+
+    async function fetchWithTimeout(url, ms = 10000) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      try {
+        const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.text();
+      } finally { clearTimeout(t); }
+    }
+
+    async function fetchNoaaDeclination(latitude, longitude) {
+      const errors = [];
+      for (const key of NOAA_KEYS) {
+        const url = new URL(NOAA_BASE);
+        url.searchParams.set('lat1', latitude.toFixed(6));
+        url.searchParams.set('lon1', longitude.toFixed(6));
+        url.searchParams.set('model', 'WMM');
+        url.searchParams.set('resultFormat', 'json');
+        url.searchParams.set('key', key);
+        const target = url.toString();
+
+        const routes = [
+          target,
+          'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
+          'https://corsproxy.io/?' + encodeURIComponent(target)
+        ];
+        for (const route of routes) {
+          try {
+            return parseNoaaDeclination(await fetchWithTimeout(route));
+          } catch (e) {
+            errors.push(`${new URL(route).hostname}: ${e.name === 'AbortError' ? 'タイムアウト' : e.message}`);
+          }
+        }
+      }
+      throw new Error(errors.join(' / '));
+    }
+
+    function getGpsDeclination(auto = false) {
+      if (!navigator.geolocation) {
+        if (!auto) showToast('この端末/ブラウザではGPS位置情報を利用できません', 'error');
+        return;
+      }
+
+      btnGpsDeclination.disabled = true;
+      btnGpsDeclination.classList.add('opacity-60', 'cursor-wait');
+      gpsDeclinationStatus.textContent = 'GPSで現在地を取得中…';
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        state.gps.latitude = latitude;
+        state.gps.longitude = longitude;
+        state.gps.accuracy = accuracy;
+
+        gpsDeclinationStatus.textContent = `現在地 ${latitude.toFixed(4)}°, ${longitude.toFixed(4)}° — 偏角計算中…`;
+
+        try {
+          const declination = await fetchNoaaDeclination(latitude, longitude);
+          setDeclinationValue(
+            declination,
+            `GPS ${latitude.toFixed(4)}°, ${longitude.toFixed(4)}° / WMM偏角: ${declination >= 0 ? '+' : ''}${declination.toFixed(1)}°`
+          );
+          state.gps.declinationLoaded = true;
+          showToast(`現在地の偏角 ${declination >= 0 ? '+' : ''}${declination.toFixed(1)}° を適用しました`);
+        } catch (err) {
+          console.error('NOAA declination error:', err);
+          gpsDeclinationStatus.textContent = `偏角を取得できません（オフライン等）。現在の偏角 ${state.declination >= 0 ? '+' : ''}${state.declination.toFixed(1)}° を使用中`;
+          if (!auto) showToast('偏角を自動取得できませんでした。通信を確認するか、偏角欄に手動で入力してください', 'error');
+        } finally {
+          btnGpsDeclination.disabled = false;
+          btnGpsDeclination.classList.remove('opacity-60', 'cursor-wait');
+        }
+      }, (error) => {
+        const messages = {
+          1: '位置情報の利用が許可されていません',
+          2: '現在地を取得できませんでした',
+          3: 'GPS位置情報の取得がタイムアウトしました'
+        };
+        gpsDeclinationStatus.textContent = messages[error.code] || 'GPS位置情報の取得に失敗しました';
+        if (!auto) showToast(messages[error.code] || 'GPS位置情報の取得に失敗しました', 'error');
+        btnGpsDeclination.disabled = false;
+        btnGpsDeclination.classList.remove('opacity-60', 'cursor-wait');
+      }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000
+      });
+    }
+
+    btnGpsDeclination.addEventListener('click', () => getGpsDeclination(false));
+
+    inputDeclination.addEventListener('change', (e) => {
+      const val = parseFloat(e.target.value) || 0.0;
+      setDeclinationValue(val);
+      showToast(`偏角補正を ${val >= 0 ? '+' : ''}${val}° に更新`);
+    });
+
+    /* Confirmation Modal & Deletion Controller */
+    let confirmAction = null;
+    const btnClearRecords = document.getElementById('btn-clear-records');
+    const confirmModal = document.getElementById('confirm-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalBtnCancel = document.getElementById('modal-btn-cancel');
+    const modalBtnOk = document.getElementById('modal-btn-ok');
+
+    function openConfirmModal(title, desc, onConfirm) {
+      modalTitle.textContent = title;
+      modalDesc.textContent = desc;
+      confirmAction = onConfirm;
+      confirmModal.classList.remove('hidden');
+    }
+
+    modalBtnCancel.addEventListener('click', () => {
+      confirmModal.classList.add('hidden');
+      confirmAction = null;
+    });
+
+    modalBtnOk.addEventListener('click', () => {
+      if (typeof confirmAction === 'function') {
+        confirmAction();
+      }
+      confirmModal.classList.add('hidden');
+      confirmAction = null;
+    });
+
+    function deleteGroupRecords(groupId) {
+      const g = groups[groupId] || { label: groupId };
+      const count = state.records.filter(r => r.group === groupId).length;
+      if (count === 0) {
+        showToast(`「${g.label}」の記録データはありません`);
+        return;
+      }
+      openConfirmModal(
+        `${g.label} データの削除`,
+        `「${g.label}」グループの測定データ（${count}件）をすべて削除しますか？この操作は元に戻せません。`,
+        () => {
+          state.records = state.records.filter(r => r.group !== groupId);
+          state.records.forEach((r, idx) => r.id = idx + 1);
+          saveRecords();
+          renderRecordList();
+          drawStereonet();
+          showToast(`「${g.label}」グループのデータを削除しました`);
+          if (!statsModal.classList.contains('hidden')) {
+            renderStatsContent();
+          }
+        }
+      );
+    }
+
+    btnClearActiveGroup?.addEventListener('click', () => {
+      deleteGroupRecords(state.activeGroup);
+    });
+
+    btnClearGroupRecords?.addEventListener('click', () => {
+      deleteGroupRecords(state.activeGroup);
+    });
+
+    btnClearRecords.addEventListener('click', () => {
+      if (state.records.length === 0) {
+        showToast('記録がありません');
+        return;
+      }
+      openConfirmModal(
+        '全データの削除',
+        '保存された測定データをすべて削除しますか？この操作は元に戻せません。',
+        () => {
+          state.records = [];
+          saveRecords();
+          renderRecordList();
+          drawStereonet();
+          showToast('全データを削除しました');
+          if (!statsModal.classList.contains('hidden')) {
+            renderStatsContent();
+          }
+        }
+      );
+    });
+
+    let toastTimeout;
+    function showToast(msg, type = 'success') {
+      const toastBox = document.getElementById('toast-box');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastMsg.textContent = msg;
+      toastIcon.textContent = type === 'error' ? '⚠️' : '✓';
+      toastIcon.className = type === 'error' ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
+
+      toastBox.classList.remove('opacity-0', 'translate-y-3');
+      toastBox.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toastBox.classList.remove('opacity-100', 'translate-y-0');
+        toastBox.classList.add('opacity-0', 'translate-y-3');
+      }, 2300);
+    }
+
+    /* オフライン対応: Service Worker 登録 (https または localhost のみ) */
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW register failed', err));
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadGroups();
+      loadSavedRecords();
+      renderGroupSelectors();
+      renderGroupFilters();
+      if (!groups[state.activeGroup]) {
+        state.activeGroup = Object.keys(groups)[0] || 'Y';
+      }
+      setActiveGroup(state.activeGroup);
+      resizeCanvas();
+      updateHUD();
+      drawStereonet();
+      drawBubbleLevel();
+
+      // 前回の偏角を復元 (オフラインでも使える)
+      loadSavedDeclination();
+
+      // 起動時に毎回ボタンを押さなくてもセンサー・GPSを自動開始
+      startSensors(false).then(ok => { if (!ok) armFirstTapSensorStart(); });
+      getGpsDeclination(true);
+    });
+  </script>
+</body>
+</html>
