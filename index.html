@@ -148,13 +148,10 @@
       fill: #ffffff;
       stroke: #94a3b8;
     }
-    body.light-mode #btn-sync-account:hover,
-    body.light-mode #btn-sync-account:active,
-    body.light-mode #btn-sync-account:focus {
+    body.light-mode #btn-backup-open:hover,
+    body.light-mode #btn-backup-open:active,
+    body.light-mode #btn-backup-open:focus {
       background-color: #f1f5f9 !important;
-    }
-    body.light-mode #sync-status-dot {
-      border-color: #ffffff !important;
     }
   </style>
 </head>
@@ -162,10 +159,10 @@
 
   <header id="app-header" class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-3 pb-2">
     <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
-      <!-- 左上アイコンをアカウント・クラウド同期ボタン化 -->
-      <button id="btn-sync-account" type="button" class="group flex items-center space-x-2 text-left rounded-xl p-1 -ml-1 hover:bg-slate-800/40 active:scale-95 transition focus:outline-none" title="アカウント連携・クラウド同期・バックアップ">
+      <!-- 左上アイコン: バックアップ（保存・復元）ボタン -->
+      <button id="btn-backup-open" type="button" class="group flex items-center space-x-2 text-left rounded-xl p-1 -ml-1 hover:bg-slate-800/40 active:scale-95 transition focus:outline-none" title="バックアップ">
         <div class="relative w-9 h-9 rounded-lg bg-[#080c14] flex items-center justify-center shadow-lg shadow-cyan-500/15 ring-1 ring-slate-700/80 group-hover:ring-cyan-400/60 transition overflow-visible">
-          <svg id="sync-default-icon" class="w-full h-full rounded-lg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="w-full h-full rounded-lg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- 背景 -->
             <rect width="100" height="100" rx="18" fill="#080c14"/>
             <!-- 外周のシアン円 (Primitive Circle) -->
@@ -182,17 +179,12 @@
             <!-- 赤い極点 (Pole) -->
             <circle cx="37" cy="38" r="6.8" fill="#f43f5e" stroke="#ffffff" stroke-width="2.2"/>
           </svg>
-          <!-- クラウド同期ステータスバッジ -->
-          <span id="sync-status-dot" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-slate-500 border-2 border-slate-900 flex items-center justify-center"></span>
         </div>
         <div>
           <div class="flex items-center gap-1">
             <h1 class="text-base font-bold tracking-tight text-white leading-none">GeoStereo</h1>
-            <svg class="w-3 h-3 text-cyan-400 opacity-80 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
-            </svg>
           </div>
-          <span id="sync-header-sub" class="block text-[9px] font-medium text-slate-400 leading-tight mt-0.5">タップで同期・バックアップ</span>
+          <span class="block text-[9px] font-medium text-slate-400 leading-tight mt-0.5">タップでバックアップ</span>
         </div>
       </button>
 
@@ -521,8 +513,8 @@
 
   </main>
 
-  <!-- Account & Cloud Sync / Backup Modal (左上GeoStereoアイコンから起動) -->
-  <div id="sync-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 hidden">
+  <!-- Backup Modal (左上GeoStereoアイコンから起動) -->
+  <div id="backup-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 hidden">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col gap-3">
       <!-- Header -->
       <div class="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -533,116 +525,14 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-white">Googleアカウント連携・バックアップ</h3>
-            <p class="text-[10px] text-slate-400">Googleアカウントによるクラウド自動同期とドライブ保存</p>
+            <h3 class="text-sm font-bold text-white">バックアップ</h3>
+            <p class="text-[10px] text-slate-400">測定データをファイル(.json)で保存・復元</p>
           </div>
         </div>
-        <button id="btn-close-sync" type="button" class="text-slate-400 hover:text-white px-1.5 text-xl leading-none">&times;</button>
+        <button id="btn-close-backup" type="button" class="text-slate-400 hover:text-white px-1.5 text-xl leading-none">&times;</button>
       </div>
 
-      <!-- 1. Google Account & Cloud Connection Status -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2.5">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="relative flex-shrink-0">
-              <img id="modal-google-avatar" src="" alt="" class="w-8 h-8 rounded-full object-cover border border-cyan-400 hidden">
-              <div id="modal-google-avatar-placeholder" class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-cyan-300">G</div>
-              <span id="modal-sync-dot" class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-slate-500 border border-slate-950"></span>
-            </div>
-            <div class="min-w-0">
-              <div id="modal-sync-account-name" class="text-xs font-bold text-white truncate">Googleアカウント未連携</div>
-              <div id="modal-sync-account-email" class="text-[10px] text-cyan-300 font-mono truncate hidden"></div>
-              <div id="modal-sync-last-time" class="text-[10px] text-slate-400 truncate">最終同期: 未同期</div>
-            </div>
-          </div>
-          <label class="flex items-center gap-1.5 text-[10px] text-slate-300 cursor-pointer flex-shrink-0 bg-slate-900 px-2 py-1 rounded-md border border-slate-700">
-            <input type="checkbox" id="chk-auto-sync" checked class="accent-cyan-400 rounded">
-            <span>自動同期</span>
-          </label>
-        </div>
-
-        <!-- Google Account Selection / Sign-In Buttons -->
-        <div class="flex items-center gap-2">
-          <button id="btn-google-login" type="button" class="flex-1 py-2.5 px-3 rounded-lg bg-white hover:bg-slate-100 active:scale-[0.99] text-slate-900 font-bold text-xs flex items-center justify-center gap-2 shadow transition border border-slate-300">
-            <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
-              <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
-              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
-              <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 12.3s.6 3.3 1.6 5.3l3.7-2.8z"/>
-              <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5L1.6 16c1.9 3.9 5.8 7 10.4 7z"/>
-            </svg>
-            <span id="lbl-google-login" class="text-slate-900">Googleアカウントを選択して連携</span>
-          </button>
-          <button id="btn-google-logout" type="button" class="hidden py-2.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-[11px] font-semibold transition whitespace-nowrap">
-            連携解除
-          </button>
-        </div>
-
-        <!-- Google Account Chooser Panel (ポップアップ制限環境や複数アカウント切替用) -->
-        <div id="google-account-chooser" class="hidden bg-slate-900 border border-slate-700 rounded-xl p-3 space-y-2.5 shadow-inner">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
-            <div class="flex items-center gap-1.5">
-              <svg class="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
-                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
-                <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 12.3s.6 3.3 1.6 5.3l3.7-2.8z"/>
-                <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5L1.6 16c1.9 3.9 5.8 7 10.4 7z"/>
-              </svg>
-              <span class="text-xs font-bold text-white">連携するGoogleアカウントを選択</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button id="btn-clear-all-saved-accounts" type="button" class="hidden text-[10px] px-2 py-0.5 rounded bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/70 transition" title="保存されているアカウント履歴をすべて削除">
-                履歴を全削除
-              </button>
-              <button id="btn-close-chooser" type="button" class="text-slate-400 hover:text-white text-sm px-1">&times;</button>
-            </div>
-          </div>
-
-          <!-- Saved Google Accounts List -->
-          <div id="google-chooser-list" class="space-y-1.5 max-h-44 overflow-y-auto"></div>
-
-          <!-- Add / Use Another Google Account Form -->
-          <form id="form-google-account" class="space-y-2 pt-1 border-t border-slate-800/80">
-            <div class="text-[10px] text-slate-400">別のGoogleアカウントを使用:</div>
-            <div class="space-y-1.5">
-              <input id="input-google-email" type="email" required placeholder="example@gmail.com (Googleメールアドレス)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-400">
-              <div class="flex items-center gap-1.5">
-                <input id="input-google-name" type="text" placeholder="表示名 (任意: 例 Yuta Ichizawa)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400">
-                <button type="submit" class="keep-white px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition flex-shrink-0">
-                  このアカウントで連携
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        <!-- Manual Cloud Push / Pull Buttons -->
-        <div class="grid grid-cols-2 gap-2 pt-1">
-          <button id="btn-cloud-push" type="button" class="py-2 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[11px] font-semibold flex items-center justify-center gap-1 transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-            </svg>
-            <span>クラウドへ今すぐ保存</span>
-          </button>
-          <button id="btn-cloud-pull" type="button" class="py-2 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-[11px] font-semibold flex items-center justify-center gap-1 transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
-            </svg>
-            <span>クラウドから取得</span>
-          </button>
-        </div>
-
-        <!-- User ID Display (Full UID with copy) -->
-        <div class="flex items-center justify-between gap-1.5 bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800 text-[10px]">
-          <div class="truncate text-slate-400">
-            ユーザーID: <span id="sync-user-id" class="font-mono text-slate-200 select-all">---</span>
-          </div>
-          <button id="btn-copy-uid" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[9px] flex-shrink-0">
-            コピー
-          </button>
-        </div>
-      </div>
-
-      <!-- 2. Google Drive / File Backup (JSON Export & Import) -->
+      <!-- File Backup (JSON Export & Import) -->
       <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
         <div class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -671,7 +561,7 @@
       </div>
 
       <div class="pt-1 border-t border-slate-800 flex justify-end">
-        <button id="btn-close-sync-footer" type="button" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">閉じる</button>
+        <button id="btn-close-backup-footer" type="button" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">閉じる</button>
       </div>
     </div>
   </div>
@@ -960,25 +850,6 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import {
-      getAuth,
-      signInAnonymously,
-      signInWithCustomToken,
-      GoogleAuthProvider,
-      signInWithPopup,
-      linkWithPopup,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
     /* Default Groups Definition */
     const DEFAULT_GROUPS = {
       Loc1: {
@@ -1058,449 +929,77 @@
         showNormals: true,
         showMeans: true,
         selectedRecordId: null
-      },
-
-      // Cloud Sync & Account State
-      sync: {
-        ready: false,
-        autoSync: true,
-        googleAccount: null, // { email, name, photoURL }
-        savedAccounts: [],   // Previously used Google accounts for quick switching
-        lastSyncedAt: null,
-        isApplyingRemote: false,
-        lastWriteToken: ''
       }
     };
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'geostereo-default-app';
-    let app = null;
-    let db = null;
-    let auth = null;
-    let currentUser = null;
-    let unsubscribeSnapshot = null;
-    let syncDebounceTimer = null;
+    /* ローカル保存 (localStorage): アプリを閉じても測定データが残る */
+    const STORAGE_KEY = 'geostereo_workspace_v1';
+    let saveTimer = null;
+    let isRestoring = false;
 
-    function normalizeGoogleEmailKey(email) {
-      return String(email || '')
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_\-@.\u3040-\u30ff\u4e00-\u9faf]/g, '_')
-        .slice(0, 64);
-    }
-
-    function getActiveGoogleAccount() {
-      if (state.sync.googleAccount && state.sync.googleAccount.email) {
-        return state.sync.googleAccount;
-      }
-      if (
-        currentUser &&
-        !currentUser.isAnonymous &&
-        (currentUser.providerData?.some(p => p.providerId === 'google.com') || currentUser.email)
-      ) {
-        return {
-          email: currentUser.email || '',
-          name: currentUser.displayName || currentUser.email || 'Googleユーザー',
-          photoURL: currentUser.photoURL || ''
-        };
-      }
-      return null;
-    }
-
-    function rememberGoogleAccount(acc) {
-      if (!acc || !acc.email) return;
-      const emailLower = acc.email.trim().toLowerCase();
-      const existingIdx = state.sync.savedAccounts.findIndex(a => a.email.toLowerCase() === emailLower);
-      const entry = {
-        email: emailLower,
-        name: (acc.name || emailLower.split('@')[0]).trim(),
-        photoURL: acc.photoURL || ''
-      };
-      if (existingIdx >= 0) {
-        state.sync.savedAccounts[existingIdx] = entry;
-      } else {
-        state.sync.savedAccounts.unshift(entry);
-      }
-      saveAccountHistoryToCloud();
-    }
-
-    async function saveAccountHistoryToCloud() {
-      if (!db || !currentUser) return;
+    function saveWorkspaceNow() {
+      if (isRestoring) return;
+      clearTimeout(saveTimer);
       try {
-        const prefRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'geostereo_backup', 'account_prefs');
-        await setDoc(prefRef, {
-          savedAccountsJson: JSON.stringify(state.sync.savedAccounts),
-          activeAccountJson: JSON.stringify(state.sync.googleAccount || null),
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          declination: Number(state.declination) || 0,
+          lightMode: Boolean(state.lightMode),
+          activeGroup: state.activeGroup,
+          groups: groups,
+          records: state.records
+        }));
       } catch (err) {
-        console.warn('Account history save error:', err);
+        console.warn('Local save failed:', err);
       }
     }
 
-    async function loadAccountHistoryFromCloud() {
-      if (!db || !currentUser) return;
+    function scheduleSave() {
+      if (isRestoring) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveWorkspaceNow, 300);
+    }
+
+    function restoreWorkspace() {
+      isRestoring = true;
       try {
-        const prefRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'geostereo_backup', 'account_prefs');
-        const snap = await getDoc(prefRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.savedAccountsJson) {
-            const list = JSON.parse(data.savedAccountsJson);
-            if (Array.isArray(list)) {
-              state.sync.savedAccounts = list;
-            }
-          }
-          if (data.activeAccountJson && !state.sync.googleAccount) {
-            const active = JSON.parse(data.activeAccountJson);
-            if (active && active.email) {
-              state.sync.googleAccount = active;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Account history load error:', err);
-      }
-    }
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data || typeof data !== 'object') return;
 
-    function getActiveWorkspaceDocRef() {
-      if (!db || !currentUser) return null;
-      const gAcc = getActiveGoogleAccount();
-      if (gAcc && gAcc.email) {
-        const emailKey = normalizeGoogleEmailKey(gAcc.email);
-        if (emailKey) {
-          // RULE 1: Googleアカウント固有のクラウド領域
-          return doc(db, 'artifacts', appId, 'public', 'data', 'geostereo_google_accounts', emailKey);
+        if (data.groups && typeof data.groups === 'object' && Object.keys(data.groups).length > 0) {
+          groups = data.groups;
         }
-      }
-      // RULE 1: Private user path
-      return doc(db, 'artifacts', appId, 'users', currentUser.uid, 'geostereo_backup', 'workspace');
-    }
-
-    function updateSyncUI(statusMode = 'idle', detailText = '') {
-      const dotHeader = document.getElementById('sync-status-dot');
-      const subHeader = document.getElementById('sync-header-sub');
-      const dotModal = document.getElementById('modal-sync-dot');
-      const accNameEl = document.getElementById('modal-sync-account-name');
-      const accEmailEl = document.getElementById('modal-sync-account-email');
-      const lastTimeEl = document.getElementById('modal-sync-last-time');
-      const uidEl = document.getElementById('sync-user-id');
-      const avatarEl = document.getElementById('sync-user-avatar');
-      const defaultIconEl = document.getElementById('sync-default-icon');
-      const modalAvatarEl = document.getElementById('modal-google-avatar');
-      const modalAvatarPlaceholder = document.getElementById('modal-google-avatar-placeholder');
-      const lblGoogleLogin = document.getElementById('lbl-google-login');
-      const btnGoogleLogout = document.getElementById('btn-google-logout');
-
-      if (uidEl) {
-        uidEl.textContent = currentUser?.uid || '未接続';
-      }
-
-      const gAcc = getActiveGoogleAccount();
-      const isGoogleLinked = Boolean(gAcc && gAcc.email);
-
-      if (isGoogleLinked) {
-        const dispName = gAcc.name || gAcc.email;
-        const initial = (dispName[0] || 'G').toUpperCase();
-        if (accNameEl) accNameEl.textContent = dispName;
-        if (accEmailEl) {
-          accEmailEl.textContent = gAcc.email;
-          accEmailEl.classList.remove('hidden');
-        }
-        if (lblGoogleLogin) lblGoogleLogin.textContent = '別のGoogleアカウントを選択';
-        if (btnGoogleLogout) btnGoogleLogout.classList.remove('hidden');
-
-        if (modalAvatarPlaceholder) modalAvatarPlaceholder.textContent = initial;
-        if (gAcc.photoURL && modalAvatarEl && modalAvatarPlaceholder) {
-          modalAvatarEl.src = gAcc.photoURL;
-          modalAvatarEl.onerror = () => {
-            modalAvatarEl.classList.add('hidden');
-            modalAvatarPlaceholder.classList.remove('hidden');
-          };
-          modalAvatarEl.classList.remove('hidden');
-          modalAvatarPlaceholder.classList.add('hidden');
-        } else if (modalAvatarEl && modalAvatarPlaceholder) {
-          modalAvatarEl.classList.add('hidden');
-          modalAvatarPlaceholder.classList.remove('hidden');
-        }
-
-        if (gAcc.photoURL && avatarEl && defaultIconEl) {
-          avatarEl.src = gAcc.photoURL;
-          avatarEl.onerror = () => {
-            avatarEl.classList.add('hidden');
-            defaultIconEl.classList.remove('hidden');
-          };
-          avatarEl.classList.remove('hidden');
-          defaultIconEl.classList.add('hidden');
-        } else if (avatarEl && defaultIconEl) {
-          avatarEl.classList.add('hidden');
-          defaultIconEl.classList.remove('hidden');
-        }
-      } else {
-        if (accNameEl) accNameEl.textContent = 'Googleアカウント未連携';
-        if (accEmailEl) {
-          accEmailEl.textContent = '';
-          accEmailEl.classList.add('hidden');
-        }
-        if (lblGoogleLogin) lblGoogleLogin.textContent = 'Googleアカウントを選択して連携';
-        if (btnGoogleLogout) btnGoogleLogout.classList.add('hidden');
-        if (modalAvatarEl && modalAvatarPlaceholder) {
-          modalAvatarEl.classList.add('hidden');
-          modalAvatarPlaceholder.classList.remove('hidden');
-          modalAvatarPlaceholder.textContent = 'G';
-        }
-        if (avatarEl && defaultIconEl) {
-          avatarEl.classList.add('hidden');
-          defaultIconEl.classList.remove('hidden');
-        }
-      }
-
-      if (statusMode === 'syncing') {
-        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse';
-        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border border-slate-950 animate-pulse';
-        if (subHeader) subHeader.textContent = 'Google同期中...';
-      } else if (statusMode === 'synced' || (state.sync.ready && isGoogleLinked)) {
-        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900';
-        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-slate-950';
-        if (subHeader) {
-          subHeader.textContent = isGoogleLinked
-            ? (gAcc.email || gAcc.name)
-            : 'クラウド同期中';
-        }
-      } else if (statusMode === 'error') {
-        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-500 border-2 border-slate-900';
-        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 border border-slate-950';
-        if (subHeader) subHeader.textContent = '同期エラー・タップで確認';
-      } else {
-        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-slate-500 border-2 border-slate-900';
-        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-slate-500 border border-slate-950';
-        if (subHeader) subHeader.textContent = isGoogleLinked ? gAcc.email : 'タップでGoogle連携';
-      }
-
-      if (lastTimeEl) {
-        if (detailText) {
-          lastTimeEl.textContent = detailText;
-        } else if (state.sync.lastSyncedAt) {
-          lastTimeEl.textContent = `最終同期: ${state.sync.lastSyncedAt}`;
-        } else {
-          lastTimeEl.textContent = isGoogleLinked ? '最終同期: 同期準備完了' : '最終同期: 未連携';
-        }
-      }
-    }
-
-    function applyRemoteWorkspaceData(data) {
-      if (!data || typeof data !== 'object') return;
-      state.sync.isApplyingRemote = true;
-      try {
-        if (data.groupsJson) {
-          try {
-            const parsedGroups = JSON.parse(data.groupsJson);
-            if (parsedGroups && Object.keys(parsedGroups).length > 0) {
-              groups = parsedGroups;
-              Object.keys(groups).forEach(gid => {
-                if (state.groupVisible[gid] === undefined) state.groupVisible[gid] = true;
-              });
-            }
-          } catch (_) {}
-        }
-        if (data.recordsJson) {
-          try {
-            const parsedRecords = JSON.parse(data.recordsJson);
-            if (Array.isArray(parsedRecords)) {
-              state.records = parsedRecords;
-            }
-          } catch (_) {}
+        if (Array.isArray(data.records)) {
+          state.records = data.records;
         }
         if (typeof data.declination === 'number' && Number.isFinite(data.declination)) {
           state.declination = data.declination;
-          const inputDec = document.getElementById('input-declination');
-          if (inputDec) inputDec.value = data.declination.toFixed(1);
         }
-        if (typeof data.lightMode === 'boolean' && data.lightMode !== state.lightMode) {
-          applyTheme(data.lightMode, true);
+        if (typeof data.lightMode === 'boolean') {
+          state.lightMode = data.lightMode;
         }
-
-        if (!groups[state.activeGroup]) {
-          state.activeGroup = Object.keys(groups)[0] || 'Loc1';
+        if (typeof data.activeGroup === 'string' && groups[data.activeGroup]) {
+          state.activeGroup = data.activeGroup;
         }
-        renderGroupSelectors();
-        renderGroupFilters();
-        renderRecordList();
-        updateGroupCounts();
-        setActiveGroup(state.activeGroup);
-        drawStereonet();
+      } catch (err) {
+        console.warn('Local restore failed:', err);
       } finally {
-        state.sync.isApplyingRemote = false;
+        isRestoring = false;
       }
     }
 
-    async function pushWorkspaceToCloud(showNotification = false) {
-      // RULE 3: Guard every Firestore operation with currentUser check
-      if (!currentUser || !db) {
-        if (showNotification) showToast('クラウド未接続です。バックアップファイル保存をご利用ください', 'error');
-        return false;
-      }
-      const docRef = getActiveWorkspaceDocRef();
-      if (!docRef) return false;
+    // アプリを閉じる・バックグラウンドに回る直前に即保存
+    window.addEventListener('pagehide', saveWorkspaceNow);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') saveWorkspaceNow();
+    });
+    // ブラウザによる自動削除を避けるため永続ストレージを要求 (対応環境のみ)
+    try { navigator.storage?.persist?.(); } catch (_) {}
 
-      try {
-        updateSyncUI('syncing');
-        const writeToken = `${currentUser.uid}_${Date.now()}`;
-        state.sync.lastWriteToken = writeToken;
-        const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        await setDoc(docRef, {
-          updatedAt: new Date().toISOString(),
-          updatedBy: currentUser.uid,
-          accountEmail: currentUser.email || null,
-          writeToken: writeToken,
-          declination: Number(state.declination) || 0,
-          lightMode: Boolean(state.lightMode),
-          groupsJson: JSON.stringify(groups),
-          recordsJson: JSON.stringify(state.records),
-          recordCount: state.records.length
-        }, { merge: true });
-
-        state.sync.lastSyncedAt = nowStr;
-        updateSyncUI('synced', `最終同期: ${nowStr} (${state.records.length}件)`);
-        if (showNotification) {
-          showToast(`クラウドに保存しました (${state.records.length}件)`);
-        }
-        return true;
-      } catch (err) {
-        console.warn('Cloud push error:', err);
-        updateSyncUI('error', '同期エラー: 権限または通信を確認してください');
-        if (showNotification) {
-          showToast('クラウド保存に失敗しました', 'error');
-        }
-        return false;
-      }
-    }
-
-    async function pullWorkspaceFromCloud(showNotification = false) {
-      if (!currentUser || !db) {
-        if (showNotification) showToast('クラウド未接続です', 'error');
-        return false;
-      }
-      const docRef = getActiveWorkspaceDocRef();
-      if (!docRef) return false;
-
-      try {
-        updateSyncUI('syncing');
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          applyRemoteWorkspaceData(data);
-          const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          state.sync.lastSyncedAt = nowStr;
-          updateSyncUI('synced', `最終同期: ${nowStr} (${state.records.length}件)`);
-          if (showNotification) {
-            showToast(`クラウドからデータを読み込みました (${state.records.length}件)`);
-          }
-          return true;
-        } else {
-          // クラウド側にまだデータがない場合は現在のデータを初期保存
-          await pushWorkspaceToCloud(false);
-          if (showNotification) {
-            showToast('クラウド領域を新規作成し、現在のデータを保存しました');
-          }
-          return true;
-        }
-      } catch (err) {
-        console.warn('Cloud pull error:', err);
-        updateSyncUI('error', 'クラウド取得エラー');
-        if (showNotification) showToast('クラウドからの取得に失敗しました', 'error');
-        return false;
-      }
-    }
-
-    function scheduleCloudSave() {
-      if (!state.sync.autoSync || !state.sync.ready || state.sync.isApplyingRemote) return;
-      clearTimeout(syncDebounceTimer);
-      syncDebounceTimer = setTimeout(() => {
-        pushWorkspaceToCloud(false);
-      }, 650);
-    }
-
-    function attachWorkspaceListener() {
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
-        unsubscribeSnapshot = null;
-      }
-      if (!currentUser || !db) return;
-      const docRef = getActiveWorkspaceDocRef();
-      if (!docRef) return;
-
-      // Mandatory error callback on onSnapshot
-      unsubscribeSnapshot = onSnapshot(
-        docRef,
-        (snap) => {
-          if (!snap.exists()) {
-            if (state.records.length > 0) {
-              pushWorkspaceToCloud(false);
-            }
-            return;
-          }
-          const data = snap.data();
-          if (data.writeToken && data.writeToken === state.sync.lastWriteToken) {
-            return; // 自身の直近書き込みはスキップ
-          }
-          applyRemoteWorkspaceData(data);
-          const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          state.sync.lastSyncedAt = nowStr;
-          updateSyncUI('synced', `リアルタイム同期済み: ${nowStr} (${state.records.length}件)`);
-        },
-        (error) => {
-          console.warn('Firestore snapshot listener error:', error);
-          updateSyncUI('error', 'リアルタイム監視が一時停止中');
-        }
-      );
-    }
-
-    async function initCloudSync() {
-      try {
-        if (typeof __firebase_config === 'undefined' || !__firebase_config) {
-          updateSyncUI('idle', 'ローカル動作中（バックアップファイル保存対応）');
-          return;
-        }
-        const firebaseConfig = JSON.parse(__firebase_config);
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-
-        // RULE 3: Authenticate FIRST before any Firestore query
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-
-        currentUser = auth.currentUser;
-        state.sync.ready = Boolean(currentUser);
-
-        if (currentUser) {
-          await loadAccountHistoryFromCloud();
-          updateSyncUI(state.sync.ready ? 'synced' : 'idle');
-          await pullWorkspaceFromCloud(false);
-          attachWorkspaceListener();
-        } else {
-          updateSyncUI('idle');
-        }
-
-        onAuthStateChanged(auth, (user) => {
-          currentUser = user;
-          state.sync.ready = Boolean(user);
-          updateSyncUI(state.sync.ready ? 'synced' : 'idle');
-          if (user) {
-            attachWorkspaceListener();
-          }
-        });
-      } catch (err) {
-        console.warn('Cloud sync initialization skipped or failed:', err);
-        updateSyncUI('idle', 'ローカル動作中（ファイルバックアップ利用可能）');
-      }
-    }
-
-    function applyTheme(isLight, skipCloud = false) {
+    function applyTheme(isLight, skipSave = false) {
       state.lightMode = !!isLight;
       document.body.classList.toggle('light-mode', state.lightMode);
 
@@ -1528,7 +1027,7 @@
       renderGroupFilters();
       drawStereonet();
       drawBubbleLevel();
-      if (!skipCloud) scheduleCloudSave();
+      if (!skipSave) scheduleSave();
     }
 
     function loadSavedTheme() {
@@ -1548,7 +1047,7 @@
     }
 
     function saveGroups() {
-      scheduleCloudSave();
+      scheduleSave();
     }
 
     function formatAngle3(deg) {
@@ -3065,7 +2564,7 @@
     function saveRecords() {
       updateGroupCounts();
       if (state.view3d.isOpen) render3DModalGroupFilters();
-      scheduleCloudSave();
+      scheduleSave();
     }
 
     function updateGroupCounts() {
@@ -3702,7 +3201,7 @@
       gpsDeclinationStatus.textContent = sourceText || `手動偏角: ${val >= 0 ? '+' : ''}${val.toFixed(1)}°（東偏＋ / 西偏−）`;
       if (state.isSimMode) updateSimulator();
       else drawStereonet();
-      scheduleCloudSave();
+      scheduleSave();
     }
 
     function loadSavedDeclination() {
@@ -3936,296 +3435,27 @@
       }, 2300);
     }
 
-    const syncModal = document.getElementById('sync-modal');
-    const btnSyncAccount = document.getElementById('btn-sync-account');
-    const btnCloseSync = document.getElementById('btn-close-sync');
-    const btnCloseSyncFooter = document.getElementById('btn-close-sync-footer');
-    const chkAutoSync = document.getElementById('chk-auto-sync');
-    const btnGoogleLogin = document.getElementById('btn-google-login');
-    const btnGoogleLogout = document.getElementById('btn-google-logout');
-    const googleAccountChooser = document.getElementById('google-account-chooser');
-    const googleChooserList = document.getElementById('google-chooser-list');
-    const btnCloseChooser = document.getElementById('btn-close-chooser');
-    const btnClearAllSavedAccounts = document.getElementById('btn-clear-all-saved-accounts');
-    const formGoogleAccount = document.getElementById('form-google-account');
-    const inputGoogleEmail = document.getElementById('input-google-email');
-    const inputGoogleName = document.getElementById('input-google-name');
-    const btnCopyUid = document.getElementById('btn-copy-uid');
-    const btnCloudPush = document.getElementById('btn-cloud-push');
-    const btnCloudPull = document.getElementById('btn-cloud-pull');
+    const backupModal = document.getElementById('backup-modal');
+    const btnBackupOpen = document.getElementById('btn-backup-open');
+    const btnCloseBackup = document.getElementById('btn-close-backup');
+    const btnCloseBackupFooter = document.getElementById('btn-close-backup-footer');
     const btnBackupDriveExport = document.getElementById('btn-backup-drive-export');
     const inputBackupImport = document.getElementById('input-backup-import');
 
-    function openSyncModal() {
-      updateSyncUI(state.sync.ready ? 'synced' : 'idle');
-      syncModal.classList.remove('hidden');
+    function openBackupModal() {
+      backupModal.classList.remove('hidden');
     }
 
-    function closeSyncModal() {
-      googleAccountChooser.classList.add('hidden');
-      syncModal.classList.add('hidden');
+    function closeBackupModal() {
+      backupModal.classList.add('hidden');
     }
 
-    btnSyncAccount.addEventListener('click', openSyncModal);
-    btnCloseSync.addEventListener('click', closeSyncModal);
-    btnCloseSyncFooter.addEventListener('click', closeSyncModal);
-    syncModal.addEventListener('click', (e) => {
-      if (e.target === syncModal) closeSyncModal();
+    btnBackupOpen.addEventListener('click', openBackupModal);
+    btnCloseBackup.addEventListener('click', closeBackupModal);
+    btnCloseBackupFooter.addEventListener('click', closeBackupModal);
+    backupModal.addEventListener('click', (e) => {
+      if (e.target === backupModal) closeBackupModal();
     });
-
-    chkAutoSync.addEventListener('change', (e) => {
-      state.sync.autoSync = e.target.checked;
-      showToast(state.sync.autoSync ? 'クラウド自動同期をONにしました' : 'クラウド自動同期をOFFにしました');
-      if (state.sync.autoSync) scheduleCloudSave();
-    });
-
-    function renderGoogleChooserList() {
-      if (!googleChooserList) return;
-      googleChooserList.innerHTML = '';
-
-      if (btnClearAllSavedAccounts) {
-        btnClearAllSavedAccounts.classList.toggle('hidden', state.sync.savedAccounts.length === 0);
-      }
-
-      if (state.sync.savedAccounts.length === 0) {
-        googleChooserList.innerHTML = `
-          <div class="text-[10px] text-slate-400 py-1.5 text-center bg-slate-950/60 rounded-lg border border-slate-800/80">
-            保存されたアカウント履歴はありません。<br>下の欄からGoogleメールアドレスを入力して連携してください。
-          </div>
-        `;
-        return;
-      }
-
-      const activeAcc = getActiveGoogleAccount();
-      state.sync.savedAccounts.forEach(acc => {
-        const isCurrent = activeAcc && activeAcc.email.toLowerCase() === acc.email.toLowerCase();
-        const row = document.createElement('div');
-        row.className = 'w-full flex items-center justify-between gap-1.5 p-1.5 rounded-lg border transition ' +
-          (isCurrent
-            ? 'bg-cyan-950/60 border-cyan-600 text-white'
-            : 'bg-slate-950 border-slate-800 text-slate-200');
-
-        const selectBtn = document.createElement('button');
-        selectBtn.type = 'button';
-        selectBtn.className = 'flex-1 flex items-center justify-between gap-2 text-left min-w-0 p-1 rounded hover:bg-slate-800/60 transition';
-
-        const initial = (acc.name?.[0] || acc.email?.[0] || 'G').toUpperCase();
-        selectBtn.innerHTML = `
-          <div class="flex items-center gap-2 min-w-0">
-            <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white keep-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-              ${initial}
-            </div>
-            <div class="min-w-0">
-              <div class="text-xs font-bold truncate">${acc.name || acc.email}</div>
-              <div class="text-[10px] text-slate-400 font-mono truncate">${acc.email}</div>
-            </div>
-          </div>
-          <span class="text-[10px] px-2 py-0.5 rounded font-semibold flex-shrink-0 ${isCurrent ? 'bg-cyan-600 text-white keep-white' : 'bg-slate-800 text-cyan-300'}">
-            ${isCurrent ? '連携中' : '選択'}
-          </span>
-        `;
-        selectBtn.addEventListener('click', () => {
-          selectGoogleAccount(acc);
-        });
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'px-2 py-1.5 rounded-md bg-rose-950/50 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 text-[10px] font-semibold flex items-center gap-0.5 flex-shrink-0 transition active:scale-95';
-        deleteBtn.title = 'このアカウントの連携履歴を削除（非表示）';
-        deleteBtn.innerHTML = `
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-          <span>削除</span>
-        `;
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          removeSavedGoogleAccount(acc.email);
-        });
-
-        row.appendChild(selectBtn);
-        row.appendChild(deleteBtn);
-        googleChooserList.appendChild(row);
-      });
-    }
-
-    async function removeSavedGoogleAccount(email) {
-      if (!email) return;
-      const targetLower = email.trim().toLowerCase();
-      state.sync.savedAccounts = state.sync.savedAccounts.filter(
-        a => a.email.toLowerCase() !== targetLower
-      );
-
-      const activeAcc = getActiveGoogleAccount();
-      const wasActive = activeAcc && activeAcc.email.toLowerCase() === targetLower;
-
-      if (wasActive) {
-        state.sync.googleAccount = null;
-        if (auth && auth.currentUser && !auth.currentUser.isAnonymous) {
-          try {
-            await signOut(auth);
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-              await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-              await signInAnonymously(auth);
-            }
-            currentUser = auth.currentUser;
-          } catch (err) {
-            console.warn('Sign-out on account delete:', err);
-          }
-        }
-        attachWorkspaceListener();
-        updateSyncUI('idle', 'Googleアカウント連携を解除・削除しました');
-      }
-
-      await saveAccountHistoryToCloud();
-      renderGoogleChooserList();
-      showToast(`アカウント (${email}) を一覧から削除しました`);
-    }
-
-    btnClearAllSavedAccounts?.addEventListener('click', () => {
-      if (state.sync.savedAccounts.length === 0) return;
-      openConfirmModal(
-        'アカウント履歴の全削除',
-        'これまで使用したGoogleアカウントの履歴をすべて一覧から削除し、現在の連携も解除しますか？',
-        async () => {
-          state.sync.savedAccounts = [];
-          state.sync.googleAccount = null;
-          await saveAccountHistoryToCloud();
-          attachWorkspaceListener();
-          updateSyncUI('idle', 'アカウント履歴をすべて削除しました');
-          renderGoogleChooserList();
-          showToast('すべてのアカウント履歴を削除しました');
-        }
-      );
-    });
-
-    function openGoogleAccountChooser() {
-      renderGoogleChooserList();
-      googleAccountChooser.classList.remove('hidden');
-      setTimeout(() => {
-        if (state.sync.savedAccounts.length === 0 && inputGoogleEmail) {
-          inputGoogleEmail.focus();
-        }
-      }, 50);
-    }
-
-    btnCloseChooser?.addEventListener('click', () => {
-      googleAccountChooser.classList.add('hidden');
-    });
-
-    async function selectGoogleAccount(accountObj) {
-      if (!accountObj || !accountObj.email) return;
-      const email = accountObj.email.trim().toLowerCase();
-      const name = (accountObj.name || email.split('@')[0]).trim();
-      const photoURL = accountObj.photoURL || '';
-
-      state.sync.googleAccount = { email, name, photoURL };
-      rememberGoogleAccount(state.sync.googleAccount);
-      googleAccountChooser.classList.add('hidden');
-
-      updateSyncUI('syncing');
-      attachWorkspaceListener();
-
-      if (currentUser && db) {
-        await pullWorkspaceFromCloud(false);
-        await pushWorkspaceToCloud(false);
-      }
-      updateSyncUI('synced');
-      showToast(`Googleアカウント (${email}) で連携しました`);
-    }
-
-    formGoogleAccount?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = (inputGoogleEmail.value || '').trim().toLowerCase();
-      const name = (inputGoogleName.value || '').trim();
-      if (!email || !email.includes('@')) {
-        showToast('有効なGoogleメールアドレスを入力してください', 'error');
-        return;
-      }
-      inputGoogleEmail.value = '';
-      inputGoogleName.value = '';
-      await selectGoogleAccount({
-        email,
-        name: name || email.split('@')[0],
-        photoURL: ''
-      });
-    });
-
-    // Googleアカウント選択＆連携ボタン
-    btnGoogleLogin.addEventListener('click', async () => {
-      // Firebase Auth の Google OAuth ポップアップで常にアカウント選択画面 (select_account) を要求
-      if (auth) {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-        try {
-          const result = await signInWithPopup(auth, provider);
-          if (result && result.user) {
-            currentUser = result.user;
-            await selectGoogleAccount({
-              email: currentUser.email || `${currentUser.uid}@google.user`,
-              name: currentUser.displayName || currentUser.email || 'Googleユーザー',
-              photoURL: currentUser.photoURL || ''
-            });
-            return;
-          }
-        } catch (err) {
-          // ユーザーが自らポップアップを閉じた場合以外は、アプリ内Googleアカウント選択パネルを表示
-          if (err && err.code === 'auth/cancelled-popup-request') {
-            return;
-          }
-          console.info('Opening built-in Google account chooser:', err?.code || err?.message);
-        }
-      }
-      openGoogleAccountChooser();
-    });
-
-    btnGoogleLogout.addEventListener('click', async () => {
-      state.sync.googleAccount = null;
-      googleAccountChooser.classList.add('hidden');
-      if (auth) {
-        try {
-          if (auth.currentUser && !auth.currentUser.isAnonymous) {
-            await signOut(auth);
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-              await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-              await signInAnonymously(auth);
-            }
-            currentUser = auth.currentUser;
-          }
-        } catch (err) {
-          console.warn('Sign-out fallback:', err);
-        }
-      }
-      await saveAccountHistoryToCloud();
-      attachWorkspaceListener();
-      updateSyncUI('idle', 'Googleアカウント連携を解除しました');
-      showToast('Googleアカウント連携を解除しました');
-    });
-
-    // User ID コピー (iFrame制限対応のため execCommand を使用)
-    btnCopyUid.addEventListener('click', () => {
-      const uid = currentUser?.uid || '';
-      if (!uid) {
-        showToast('コピーするIDがありません', 'error');
-        return;
-      }
-      const tempInput = document.createElement('textarea');
-      tempInput.value = uid;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      try {
-        document.execCommand('copy');
-        showToast('ユーザーIDをコピーしました');
-      } catch (_) {
-        showToast('コピーに失敗しました', 'error');
-      }
-      document.body.removeChild(tempInput);
-    });
-
-    btnCloudPush.addEventListener('click', () => pushWorkspaceToCloud(true));
-    btnCloudPull.addEventListener('click', () => pullWorkspaceFromCloud(true));
 
     // Googleドライブ / ファイル共有バックアップ出力 (.json)
     btnBackupDriveExport.addEventListener('click', async () => {
@@ -4298,7 +3528,7 @@
           updateGroupCounts();
           setActiveGroup(state.activeGroup);
           drawStereonet();
-          await pushWorkspaceToCloud(false);
+          saveWorkspaceNow();
           showToast(`バックアップから ${state.records.length} 件のデータを復元しました`);
         } catch (err) {
           showToast('バックアップファイルの読み込みに失敗しました', 'error');
@@ -4317,6 +3547,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      restoreWorkspace();
       loadGroups();
       loadSavedRecords();
       loadSavedTheme();
@@ -4334,8 +3565,6 @@
       // 前回の偏角を復元
       loadSavedDeclination();
 
-      // クラウド同期・認証の初期化
-      initCloudSync();
 
       // 起動時に毎回ボタンを押さなくてもセンサー・GPSを自動開始
       startSensors(false).then(ok => { if (!ok) armFirstTapSensorStart(); });
