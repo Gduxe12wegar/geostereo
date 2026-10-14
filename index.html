@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#080c14">
+  <meta name="theme-color" content="#f1f5f9">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GeoStereo">
@@ -65,33 +65,157 @@
       background: rgba(51, 65, 85, 0.8);
       border-radius: 2px;
     }
+
+    body.light-mode {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    body.light-mode #app-header {
+      background-color: rgba(255, 255, 255, 0.94);
+      border-color: #cbd5e1;
+    }
+    body.light-mode .bg-slate-900,
+    body.light-mode .bg-slate-900\/90,
+    body.light-mode .bg-slate-900\/95 {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.light-mode .from-slate-900 {
+      background-image: linear-gradient(to bottom, #ffffff, #f8fafc) !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.light-mode .bg-slate-950,
+    body.light-mode .bg-slate-950\/60,
+    body.light-mode .bg-slate-950\/70,
+    body.light-mode .bg-slate-950\/80,
+    body.light-mode .bg-slate-950\/90 {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.light-mode .bg-slate-800,
+    body.light-mode .bg-slate-800\/60,
+    body.light-mode .bg-slate-900\/85,
+    body.light-mode .bg-slate-900\/90 {
+      background-color: #e2e8f0 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.light-mode .text-white:not(.keep-white),
+    body.light-mode .text-slate-100,
+    body.light-mode .text-slate-200,
+    body.light-mode .text-slate-300 {
+      color: #0f172a !important;
+    }
+    body.light-mode .text-slate-400,
+    body.light-mode .text-slate-500 {
+      color: #475569 !important;
+    }
+    body.light-mode .text-cyan-300,
+    body.light-mode .text-cyan-400,
+    body.light-mode .text-sky-300 {
+      color: #0284c7 !important;
+    }
+    body.light-mode .text-emerald-300,
+    body.light-mode .text-emerald-400 {
+      color: #059669 !important;
+    }
+    body.light-mode .text-purple-300,
+    body.light-mode .text-purple-400 {
+      color: #7c3aed !important;
+    }
+    body.light-mode .text-indigo-300 {
+      color: #4338ca !important;
+    }
+    body.light-mode .bg-indigo-950 {
+      background-color: #e0e7ff !important;
+      border-color: #a5b4fc !important;
+    }
+    body.light-mode .bg-emerald-950,
+    body.light-mode .bg-emerald-950\/90,
+    body.light-mode .bg-emerald-900\/40 {
+      background-color: #d1fae5 !important;
+      border-color: #6ee7b7 !important;
+    }
+    body.light-mode .bg-cyan-950\/60,
+    body.light-mode .bg-cyan-950\/80 {
+      background-color: #e0f2fe !important;
+      border-color: #7dd3fc !important;
+    }
+    body.light-mode .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) {
+      border-color: #e2e8f0 !important;
+    }
+    body.light-mode #mini-compass circle {
+      fill: #ffffff;
+      stroke: #94a3b8;
+    }
+    body.light-mode #btn-sync-account:hover,
+    body.light-mode #btn-sync-account:active,
+    body.light-mode #btn-sync-account:focus {
+      background-color: #f1f5f9 !important;
+    }
+    body.light-mode #sync-status-dot {
+      border-color: #ffffff !important;
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+<body class="light-mode min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
 
   <header id="app-header" class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-3 pb-2">
     <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" stroke-width="2"/>
-            <path stroke-linecap="round" stroke-width="2" d="M12 3v18M3 12h18M7.5 7.5l9 9M7.5 16.5l9-9"/>
+      <!-- 左上アイコンをアカウント・クラウド同期ボタン化 -->
+      <button id="btn-sync-account" type="button" class="group flex items-center space-x-2 text-left rounded-xl p-1 -ml-1 hover:bg-slate-800/40 active:scale-95 transition focus:outline-none" title="アカウント連携・クラウド同期・バックアップ">
+        <div class="relative w-9 h-9 rounded-lg bg-[#080c14] flex items-center justify-center shadow-lg shadow-cyan-500/15 ring-1 ring-slate-700/80 group-hover:ring-cyan-400/60 transition overflow-visible">
+          <svg id="sync-default-icon" class="w-full h-full rounded-lg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- 背景 -->
+            <rect width="100" height="100" rx="18" fill="#080c14"/>
+            <!-- 外周のシアン円 (Primitive Circle) -->
+            <circle cx="50" cy="50" r="37" stroke="#22d3ee" stroke-width="5.5"/>
+            <!-- 8方向放射線グリッド -->
+            <g stroke="#475569" stroke-width="3.6" stroke-linecap="butt">
+              <line x1="50" y1="10.5" x2="50" y2="89.5"/>
+              <line x1="10.5" y1="50" x2="89.5" y2="50"/>
+              <line x1="22.1" y1="22.1" x2="77.9" y2="77.9"/>
+              <line x1="77.9" y1="22.1" x2="22.1" y2="77.9"/>
+            </g>
+            <!-- 青い大円弧 (Great Circle) -->
+            <path d="M 68.5 13 C 36 21, 36 79, 68.5 87" stroke="#3b82f6" stroke-width="5.8" stroke-linecap="butt" fill="none"/>
+            <!-- 赤い極点 (Pole) -->
+            <circle cx="37" cy="38" r="6.8" fill="#f43f5e" stroke="#ffffff" stroke-width="2.2"/>
           </svg>
+          <!-- クラウド同期ステータスバッジ -->
+          <span id="sync-status-dot" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-slate-500 border-2 border-slate-900 flex items-center justify-center"></span>
         </div>
         <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-base font-bold tracking-tight text-white">GeoStereo</h1>
+          <div class="flex items-center gap-1">
+            <h1 class="text-base font-bold tracking-tight text-white leading-none">GeoStereo</h1>
+            <svg class="w-3 h-3 text-cyan-400 opacity-80 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+            </svg>
           </div>
+          <span id="sync-header-sub" class="block text-[9px] font-medium text-slate-400 leading-tight mt-0.5">タップで同期・バックアップ</span>
         </div>
-      </div>
+      </button>
 
       <!-- Action buttons -->
       <div class="flex items-center gap-1.5">
-        <button id="btn-open-guide" class="px-2 py-1 text-xs rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-900/50 transition flex items-center gap-1">
+        <!-- Global Light / Dark Mode Toggle Button -->
+        <button id="btn-theme-toggle" type="button" class="px-2 py-1 text-xs rounded-md bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition flex items-center gap-1" title="ライトモード / ダークモード切替">
+          <svg id="icon-theme-sun" class="w-3.5 h-3.5 text-amber-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-width="2" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+          </svg>
+          <svg id="icon-theme-moon" class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <span id="label-theme-toggle">ダーク</span>
+        </button>
+
+        <!-- Compact Guide Button ("ガイド") -->
+        <button id="btn-open-guide" class="px-2 py-1 text-xs rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-900/50 transition flex items-center gap-1" title="スマホの正しい当て方・設置ガイド">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <span>設置ガイド</span>
+          <span>ガイド</span>
         </button>
 
         <button id="btn-toggle-sim" class="px-2 py-1 text-xs rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1">
@@ -101,11 +225,11 @@
           <span id="label-sim-status">テスト</span>
         </button>
 
-        <button id="btn-sensor-perm" class="px-2.5 py-1 text-xs font-semibold rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-sm shadow-cyan-600/30 flex items-center gap-1">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="btn-sensor-perm" class="keep-white px-2.5 py-1 text-xs font-semibold rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-sm shadow-cyan-600/30 flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 keep-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
-          <span id="label-perm">開始</span>
+          <span id="label-perm" class="keep-white">開始</span>
         </button>
       </div>
     </div>
@@ -205,7 +329,7 @@
 
     <section class="bg-slate-900 rounded-xl p-2 border border-slate-800 flex-1 flex flex-col items-center justify-center relative shadow-inner">
 
-      <!-- Stereonet Toolbar: Group Filters, Pole & Great Circle Toggles -->
+      <!-- Stereonet Toolbar: Group Filters, Pole & Great Circle Toggles, and 3D View Trigger -->
       <div class="w-full flex flex-col gap-1.5 text-[11px] px-1 mb-1 border-b border-slate-800/70 pb-1.5">
         <!-- Row 1: 表示面フィルタ (1列表示。4個を超えた分は「詳細」パネルへ) -->
         <div class="flex items-center gap-1.5">
@@ -238,7 +362,7 @@
           <div id="group-filter-detail-list" class="flex flex-wrap gap-1"></div>
         </div>
 
-        <!-- Row 2: Elements toggle (Poles vs Great Circles) -->
+        <!-- Row 2: Elements toggle (Poles vs Great Circles) & 3D Stereonet 11 View Button -->
         <div class="flex items-center justify-between text-[10px] bg-slate-950/80 px-2 py-1 rounded border border-slate-800/80">
           <div class="flex items-center gap-3">
             <span class="text-slate-400 font-semibold">投影要素:</span>
@@ -251,6 +375,16 @@
               <span class="font-medium">⌒ 大円</span>
             </label>
           </div>
+
+          <!-- Stereonet 11 風 3D下半球表示ボタン -->
+          <button id="btn-open-3d" type="button" class="keep-white px-2.5 py-1 rounded-md bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-95 text-white font-bold text-[10px] shadow-sm shadow-cyan-500/30 flex items-center gap-1 transition">
+            <svg class="w-3.5 h-3.5 keep-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke-width="2"/>
+              <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke-width="1.6"/>
+              <path stroke-linecap="round" stroke-width="1.6" d="M3.6 15a9 6 0 0016.8 0M12 12v9"/>
+            </svg>
+            <span class="keep-white">3D下半球表示</span>
+          </button>
         </div>
       </div>
 
@@ -289,9 +423,9 @@
     <section class="flex flex-col gap-2">
       <div class="grid grid-cols-4 gap-2">
         <!-- Big Record Button with Group Indication -->
-        <button id="btn-record" class="col-span-3 py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-blue-500 active:scale-[0.98] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/30 transition">
+        <button id="btn-record" class="keep-white col-span-3 py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-blue-500 active:scale-[0.98] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/30 transition">
           <span class="w-3 h-3 rounded-full bg-white animate-pulse"></span>
-          <span>測定値を記録 (<span id="btn-record-group-name">Y面</span>)</span>
+          <span class="keep-white">測定値を記録 (<span id="btn-record-group-name" class="keep-white">Loc. 1</span>)</span>
         </button>
 
         <!-- Export Button (CSV / Excel を選択) -->
@@ -348,7 +482,7 @@
         <!-- Active Group Description & Memo snippet -->
         <div class="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 bg-slate-950/70 px-2 py-1 rounded border border-slate-800">
           <div id="group-desc-text" class="text-cyan-300 font-medium truncate">
-            Y面 (Principal displacement shear): 断層主変位面・C面
+            Loc. 1 (地点1): 測定地点・露頭 1
           </div>
           <div class="flex items-center gap-1 flex-shrink-0 ml-1">
             <label for="input-note" class="text-slate-500 text-[9px]">メモ:</label>
@@ -386,6 +520,260 @@
     <footer class="text-center text-[10px] text-slate-500 py-2 select-none">GeoStereo Made by Yuta Ichizawa</footer>
 
   </main>
+
+  <!-- Account & Cloud Sync / Backup Modal (左上GeoStereoアイコンから起動) -->
+  <div id="sync-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col gap-3">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center shadow">
+            <svg class="w-4 h-4 text-white keep-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Googleアカウント連携・バックアップ</h3>
+            <p class="text-[10px] text-slate-400">Googleアカウントによるクラウド自動同期とドライブ保存</p>
+          </div>
+        </div>
+        <button id="btn-close-sync" type="button" class="text-slate-400 hover:text-white px-1.5 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- 1. Google Account & Cloud Connection Status -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="relative flex-shrink-0">
+              <img id="modal-google-avatar" src="" alt="" class="w-8 h-8 rounded-full object-cover border border-cyan-400 hidden">
+              <div id="modal-google-avatar-placeholder" class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-cyan-300">G</div>
+              <span id="modal-sync-dot" class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-slate-500 border border-slate-950"></span>
+            </div>
+            <div class="min-w-0">
+              <div id="modal-sync-account-name" class="text-xs font-bold text-white truncate">Googleアカウント未連携</div>
+              <div id="modal-sync-account-email" class="text-[10px] text-cyan-300 font-mono truncate hidden"></div>
+              <div id="modal-sync-last-time" class="text-[10px] text-slate-400 truncate">最終同期: 未同期</div>
+            </div>
+          </div>
+          <label class="flex items-center gap-1.5 text-[10px] text-slate-300 cursor-pointer flex-shrink-0 bg-slate-900 px-2 py-1 rounded-md border border-slate-700">
+            <input type="checkbox" id="chk-auto-sync" checked class="accent-cyan-400 rounded">
+            <span>自動同期</span>
+          </label>
+        </div>
+
+        <!-- Google Account Selection / Sign-In Buttons -->
+        <div class="flex items-center gap-2">
+          <button id="btn-google-login" type="button" class="flex-1 py-2.5 px-3 rounded-lg bg-white hover:bg-slate-100 active:scale-[0.99] text-slate-900 font-bold text-xs flex items-center justify-center gap-2 shadow transition border border-slate-300">
+            <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
+              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
+              <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 12.3s.6 3.3 1.6 5.3l3.7-2.8z"/>
+              <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5L1.6 16c1.9 3.9 5.8 7 10.4 7z"/>
+            </svg>
+            <span id="lbl-google-login" class="text-slate-900">Googleアカウントを選択して連携</span>
+          </button>
+          <button id="btn-google-logout" type="button" class="hidden py-2.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-[11px] font-semibold transition whitespace-nowrap">
+            連携解除
+          </button>
+        </div>
+
+        <!-- Google Account Chooser Panel (ポップアップ制限環境や複数アカウント切替用) -->
+        <div id="google-account-chooser" class="hidden bg-slate-900 border border-slate-700 rounded-xl p-3 space-y-2.5 shadow-inner">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
+                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
+                <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 12.3s.6 3.3 1.6 5.3l3.7-2.8z"/>
+                <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5L1.6 16c1.9 3.9 5.8 7 10.4 7z"/>
+              </svg>
+              <span class="text-xs font-bold text-white">連携するGoogleアカウントを選択</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-clear-all-saved-accounts" type="button" class="hidden text-[10px] px-2 py-0.5 rounded bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/70 transition" title="保存されているアカウント履歴をすべて削除">
+                履歴を全削除
+              </button>
+              <button id="btn-close-chooser" type="button" class="text-slate-400 hover:text-white text-sm px-1">&times;</button>
+            </div>
+          </div>
+
+          <!-- Saved Google Accounts List -->
+          <div id="google-chooser-list" class="space-y-1.5 max-h-44 overflow-y-auto"></div>
+
+          <!-- Add / Use Another Google Account Form -->
+          <form id="form-google-account" class="space-y-2 pt-1 border-t border-slate-800/80">
+            <div class="text-[10px] text-slate-400">別のGoogleアカウントを使用:</div>
+            <div class="space-y-1.5">
+              <input id="input-google-email" type="email" required placeholder="example@gmail.com (Googleメールアドレス)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-400">
+              <div class="flex items-center gap-1.5">
+                <input id="input-google-name" type="text" placeholder="表示名 (任意: 例 Yuta Ichizawa)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <button type="submit" class="keep-white px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition flex-shrink-0">
+                  このアカウントで連携
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Manual Cloud Push / Pull Buttons -->
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button id="btn-cloud-push" type="button" class="py-2 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[11px] font-semibold flex items-center justify-center gap-1 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <span>クラウドへ今すぐ保存</span>
+          </button>
+          <button id="btn-cloud-pull" type="button" class="py-2 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-[11px] font-semibold flex items-center justify-center gap-1 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+            </svg>
+            <span>クラウドから取得</span>
+          </button>
+        </div>
+
+        <!-- User ID Display (Full UID with copy) -->
+        <div class="flex items-center justify-between gap-1.5 bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800 text-[10px]">
+          <div class="truncate text-slate-400">
+            ユーザーID: <span id="sync-user-id" class="font-mono text-slate-200 select-all">---</span>
+          </div>
+          <button id="btn-copy-uid" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[9px] flex-shrink-0">
+            コピー
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Google Drive / File Backup (JSON Export & Import) -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
+        <div class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          Googleドライブ / バックアップファイル保存・復元
+        </div>
+        <p class="text-[10px] text-slate-400 leading-relaxed">
+          全測定データ・カスタム面グループ・偏角設定を1つのバックアップファイル（.json）としてGoogleドライブへ保存、または復元できます。
+        </p>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-backup-drive-export" type="button" class="py-2 px-2.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/70 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <span>ドライブ等に保存</span>
+          </button>
+          <label for="input-backup-import" class="py-2 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            <span>ファイルから復元</span>
+          </label>
+          <input id="input-backup-import" type="file" accept=".json,application/json" class="hidden">
+        </div>
+      </div>
+
+      <div class="pt-1 border-t border-slate-800 flex justify-end">
+        <button id="btn-close-sync-footer" type="button" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 0. 3D Lower Hemisphere Stereonet Popup Modal (Stereonet 11 Style) -->
+  <div id="modal-3d" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-3 sm:p-4 shadow-2xl max-h-[94vh] flex flex-col gap-2 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow">
+            <svg class="w-4 h-4 text-white keep-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke-width="2"/>
+              <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke-width="1.6"/>
+              <path stroke-linecap="round" stroke-width="1.6" d="M3.6 15a9 6 0 0016.8 0M12 12v9"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-xs sm:text-sm font-bold text-white truncate">3D下半球ステレオネット (360°全方向対応)</h3>
+            <p class="text-[10px] text-slate-400 truncate">真下・斜め下・真上を含む360°自由回転 / ピンチ拡大 / 極タップで詳細</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <!-- PNG Snapshot Export -->
+          <button id="btn-3d-png" type="button" class="px-2 py-1 rounded-md bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/70 text-[10px] font-semibold transition flex items-center gap-1" title="3DプロットをPNG画像として保存">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            <span>PNG</span>
+          </button>
+          <button id="btn-close-3d" type="button" class="text-slate-400 hover:text-white px-1.5 text-xl leading-none">&times;</button>
+        </div>
+      </div>
+
+      <!-- Group Filters synced inside 3D Modal -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+        <span class="text-[10px] text-slate-400 font-semibold flex-shrink-0">表示面:</span>
+        <div id="modal-3d-group-filters" class="flex items-center gap-1 flex-1 overflow-x-auto"></div>
+      </div>
+
+      <!-- 3D Canvas Container -->
+      <div id="canvas-3d-wrapper" class="relative w-full aspect-square max-h-[52vh] sm:max-h-[56vh] mx-auto bg-slate-950 rounded-xl border border-slate-800 overflow-hidden flex items-center justify-center select-none touch-none">
+        <canvas id="stereonet-3d-canvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+        <!-- Camera Orientation Readout Overlay (Top-Left) -->
+        <div class="absolute top-2 left-2 bg-slate-900/85 backdrop-blur-sm border border-slate-700/80 rounded-lg px-2 py-1 pointer-events-none text-[10px] font-mono text-slate-300 flex flex-col gap-0.5">
+          <div>視線方位 <span id="lbl-3d-az" class="text-cyan-300 font-bold">155°</span> / 仰角 <span id="lbl-3d-el" class="text-emerald-300 font-bold">+32°</span></div>
+          <div class="text-[9px] text-slate-400"><span id="lbl-3d-hemisphere-view">上方俯瞰</span> ・ <span id="lbl-3d-count">0</span>面</div>
+        </div>
+
+        <!-- Projection Mode Toggle (Top-Right) -->
+        <div class="absolute top-2 right-2 flex items-center gap-1">
+          <button id="btn-3d-proj-mode" type="button" class="bg-slate-900/85 hover:bg-slate-800 backdrop-blur-sm border border-slate-700/80 rounded-lg px-2 py-1 text-[10px] font-mono text-slate-200 transition">
+            投影: <span id="lbl-3d-proj" class="text-cyan-300 font-bold">透視(3D)</span>
+          </button>
+        </div>
+
+        <!-- Selected Record / Live Inspector Bar (Bottom) -->
+        <div id="stereonet-3d-tooltip" class="absolute bottom-2 inset-x-2 bg-slate-900/90 backdrop-blur-sm border border-slate-700/80 rounded-lg px-2.5 py-1 text-center text-[10px] sm:text-[11px] font-mono text-slate-300 truncate pointer-events-none">
+          360°上下左右にドラッグして回転（真下・裏面からも閲覧可能） / 極(●)タップで詳細
+        </div>
+      </div>
+
+      <!-- Camera Viewpoint Quick Presets (including Nadir / Bottom & Oblique Bottom) -->
+      <div class="flex items-center justify-between gap-1 text-[10px] overflow-x-auto pb-0.5">
+        <span class="text-slate-400 font-semibold flex-shrink-0">視点:</span>
+        <div class="flex items-center gap-1 flex-1 justify-end overflow-x-auto">
+          <button type="button" data-3d-view="default" class="btn-3d-preset px-2 py-1 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700/70 hover:bg-cyan-900 font-semibold whitespace-nowrap">俯瞰(上)</button>
+          <button type="button" data-3d-view="bottom-oblique" class="btn-3d-preset px-2 py-1 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700/70 hover:bg-cyan-900 font-semibold whitespace-nowrap">斜め下</button>
+          <button type="button" data-3d-view="top" class="btn-3d-preset px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 whitespace-nowrap">真上(+90°)</button>
+          <button type="button" data-3d-view="bottom" class="btn-3d-preset px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 whitespace-nowrap">真下(-90°)</button>
+          <button type="button" data-3d-view="south" class="btn-3d-preset px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 whitespace-nowrap">南から(S)</button>
+          <button type="button" data-3d-view="east" class="btn-3d-preset px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 whitespace-nowrap">東から(E)</button>
+        </div>
+      </div>
+
+      <!-- 3D Plot Elements Checkboxes -->
+      <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5 bg-slate-950/90 p-2 rounded-xl border border-slate-800 text-[10px]">
+        <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+          <input type="checkbox" id="chk-3d-gc" checked class="accent-cyan-400 rounded scale-90">
+          <span class="truncate">⌒ 大円弧</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+          <input type="checkbox" id="chk-3d-planes" checked class="accent-cyan-400 rounded scale-90">
+          <span class="truncate">◐ 3D傾斜面</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+          <input type="checkbox" id="chk-3d-poles" checked class="accent-cyan-400 rounded scale-90">
+          <span class="truncate">● 極(Pole)</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+          <input type="checkbox" id="chk-3d-normals" checked class="accent-cyan-400 rounded scale-90">
+          <span class="truncate">⊥ 法線軸</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+          <input type="checkbox" id="chk-3d-means" checked class="accent-cyan-400 rounded scale-90">
+          <span class="truncate">◆ 群平均</span>
+        </label>
+      </div>
+    </div>
+  </div>
 
   <!-- 1. Installation Guide Modal -->
   <div id="guide-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 hidden">
@@ -571,43 +959,48 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      signInWithCustomToken,
+      GoogleAuthProvider,
+      signInWithPopup,
+      linkWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
     /* Default Groups Definition */
     const DEFAULT_GROUPS = {
-      Y: {
-        id: 'Y',
-        label: 'Y面',
-        sub: '主変位',
-        desc: 'Y面 (Principal displacement shear): 断層主変位面・C面',
+      Loc1: {
+        id: 'Loc1',
+        label: 'Loc. 1',
+        sub: '地点1',
+        desc: 'Loc. 1 (地点1): 測定地点・露頭 1',
         color: '#06b6d4'
       },
-      P: {
-        id: 'P',
-        label: 'P面',
-        sub: '圧縮',
-        desc: 'P面 (Compressive shear): 最大圧縮軸と共役の逆傾斜剪断割れ目',
+      Loc2: {
+        id: 'Loc2',
+        label: 'Loc. 2',
+        sub: '地点2',
+        desc: 'Loc. 2 (地点2): 測定地点・露頭 2',
         color: '#f59e0b'
       },
-      R: {
-        id: 'R',
-        label: 'R面',
-        sub: 'リーデル',
-        desc: 'R面 (Synthetic Riedel shear): 主剪断方向から約15°傾いた合成剪断',
+      Loc3: {
+        id: 'Loc3',
+        label: 'Loc. 3',
+        sub: '地点3',
+        desc: 'Loc. 3 (地点3): 測定地点・露頭 3',
         color: '#f43f5e'
-      },
-      R_prime: {
-        id: 'R_prime',
-        label: "R'面",
-        sub: '共役R',
-        desc: "R'面 (Antithetic Riedel shear): 主剪断に対して約75°の高角共役剪断",
-        color: '#a855f7'
-      },
-      Other: {
-        id: 'Other',
-        label: 'その他',
-        sub: '層理/他',
-        desc: 'その他 / 層理面 (S0, S1, 方解石脈, 節理面など)',
-        color: '#10b981'
       }
     };
 
@@ -623,6 +1016,7 @@
     const state = {
       sensorActive: false,
       isSimMode: false,
+      lightMode: true,
       declination: 0.0,
       gps: {
         latitude: null,
@@ -630,7 +1024,7 @@
         accuracy: null,
         declinationLoaded: false
       },
-      activeGroup: 'Y',
+      activeGroup: 'Loc1',
       
       // Projection view toggles
       showPoles: true,
@@ -649,18 +1043,503 @@
       },
 
       filterAlpha: 0.22,
-      records: []
+      records: [],
+
+      // 3D Lower Hemisphere Viewer State (Stereonet 11 Style, Full 360° rotation)
+      view3d: {
+        isOpen: false,
+        camAz: 155,       // Camera azimuth in degrees (0..360)
+        camEl: 32,        // Camera elevation in degrees (-180..+180; +90 = Top/Zenith, -90 = Bottom/Nadir)
+        zoom: 1.0,        // Zoom multiplier
+        perspective: true,// true: Perspective 3D, false: Orthographic 3D
+        showGC: true,
+        showPlanes: true,
+        showPoles: true,
+        showNormals: true,
+        showMeans: true,
+        selectedRecordId: null
+      },
+
+      // Cloud Sync & Account State
+      sync: {
+        ready: false,
+        autoSync: true,
+        googleAccount: null, // { email, name, photoURL }
+        savedAccounts: [],   // Previously used Google accounts for quick switching
+        lastSyncedAt: null,
+        isApplyingRemote: false,
+        lastWriteToken: ''
+      }
     };
 
-    function loadGroups() {
-      try {
-        const saved = localStorage.getItem('geostereo_groups_v5');
-        if (saved) {
-          groups = JSON.parse(saved);
-        }
-      } catch (e) {
-        console.warn('Groups storage load failed', e);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'geostereo-default-app';
+    let app = null;
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let unsubscribeSnapshot = null;
+    let syncDebounceTimer = null;
+
+    function normalizeGoogleEmailKey(email) {
+      return String(email || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_\-@.\u3040-\u30ff\u4e00-\u9faf]/g, '_')
+        .slice(0, 64);
+    }
+
+    function getActiveGoogleAccount() {
+      if (state.sync.googleAccount && state.sync.googleAccount.email) {
+        return state.sync.googleAccount;
       }
+      if (
+        currentUser &&
+        !currentUser.isAnonymous &&
+        (currentUser.providerData?.some(p => p.providerId === 'google.com') || currentUser.email)
+      ) {
+        return {
+          email: currentUser.email || '',
+          name: currentUser.displayName || currentUser.email || 'Googleユーザー',
+          photoURL: currentUser.photoURL || ''
+        };
+      }
+      return null;
+    }
+
+    function rememberGoogleAccount(acc) {
+      if (!acc || !acc.email) return;
+      const emailLower = acc.email.trim().toLowerCase();
+      const existingIdx = state.sync.savedAccounts.findIndex(a => a.email.toLowerCase() === emailLower);
+      const entry = {
+        email: emailLower,
+        name: (acc.name || emailLower.split('@')[0]).trim(),
+        photoURL: acc.photoURL || ''
+      };
+      if (existingIdx >= 0) {
+        state.sync.savedAccounts[existingIdx] = entry;
+      } else {
+        state.sync.savedAccounts.unshift(entry);
+      }
+      saveAccountHistoryToCloud();
+    }
+
+    async function saveAccountHistoryToCloud() {
+      if (!db || !currentUser) return;
+      try {
+        const prefRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'geostereo_backup', 'account_prefs');
+        await setDoc(prefRef, {
+          savedAccountsJson: JSON.stringify(state.sync.savedAccounts),
+          activeAccountJson: JSON.stringify(state.sync.googleAccount || null),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (err) {
+        console.warn('Account history save error:', err);
+      }
+    }
+
+    async function loadAccountHistoryFromCloud() {
+      if (!db || !currentUser) return;
+      try {
+        const prefRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'geostereo_backup', 'account_prefs');
+        const snap = await getDoc(prefRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.savedAccountsJson) {
+            const list = JSON.parse(data.savedAccountsJson);
+            if (Array.isArray(list)) {
+              state.sync.savedAccounts = list;
+            }
+          }
+          if (data.activeAccountJson && !state.sync.googleAccount) {
+            const active = JSON.parse(data.activeAccountJson);
+            if (active && active.email) {
+              state.sync.googleAccount = active;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Account history load error:', err);
+      }
+    }
+
+    function getActiveWorkspaceDocRef() {
+      if (!db || !currentUser) return null;
+      const gAcc = getActiveGoogleAccount();
+      if (gAcc && gAcc.email) {
+        const emailKey = normalizeGoogleEmailKey(gAcc.email);
+        if (emailKey) {
+          // RULE 1: Googleアカウント固有のクラウド領域
+          return doc(db, 'artifacts', appId, 'public', 'data', 'geostereo_google_accounts', emailKey);
+        }
+      }
+      // RULE 1: Private user path
+      return doc(db, 'artifacts', appId, 'users', currentUser.uid, 'geostereo_backup', 'workspace');
+    }
+
+    function updateSyncUI(statusMode = 'idle', detailText = '') {
+      const dotHeader = document.getElementById('sync-status-dot');
+      const subHeader = document.getElementById('sync-header-sub');
+      const dotModal = document.getElementById('modal-sync-dot');
+      const accNameEl = document.getElementById('modal-sync-account-name');
+      const accEmailEl = document.getElementById('modal-sync-account-email');
+      const lastTimeEl = document.getElementById('modal-sync-last-time');
+      const uidEl = document.getElementById('sync-user-id');
+      const avatarEl = document.getElementById('sync-user-avatar');
+      const defaultIconEl = document.getElementById('sync-default-icon');
+      const modalAvatarEl = document.getElementById('modal-google-avatar');
+      const modalAvatarPlaceholder = document.getElementById('modal-google-avatar-placeholder');
+      const lblGoogleLogin = document.getElementById('lbl-google-login');
+      const btnGoogleLogout = document.getElementById('btn-google-logout');
+
+      if (uidEl) {
+        uidEl.textContent = currentUser?.uid || '未接続';
+      }
+
+      const gAcc = getActiveGoogleAccount();
+      const isGoogleLinked = Boolean(gAcc && gAcc.email);
+
+      if (isGoogleLinked) {
+        const dispName = gAcc.name || gAcc.email;
+        const initial = (dispName[0] || 'G').toUpperCase();
+        if (accNameEl) accNameEl.textContent = dispName;
+        if (accEmailEl) {
+          accEmailEl.textContent = gAcc.email;
+          accEmailEl.classList.remove('hidden');
+        }
+        if (lblGoogleLogin) lblGoogleLogin.textContent = '別のGoogleアカウントを選択';
+        if (btnGoogleLogout) btnGoogleLogout.classList.remove('hidden');
+
+        if (modalAvatarPlaceholder) modalAvatarPlaceholder.textContent = initial;
+        if (gAcc.photoURL && modalAvatarEl && modalAvatarPlaceholder) {
+          modalAvatarEl.src = gAcc.photoURL;
+          modalAvatarEl.onerror = () => {
+            modalAvatarEl.classList.add('hidden');
+            modalAvatarPlaceholder.classList.remove('hidden');
+          };
+          modalAvatarEl.classList.remove('hidden');
+          modalAvatarPlaceholder.classList.add('hidden');
+        } else if (modalAvatarEl && modalAvatarPlaceholder) {
+          modalAvatarEl.classList.add('hidden');
+          modalAvatarPlaceholder.classList.remove('hidden');
+        }
+
+        if (gAcc.photoURL && avatarEl && defaultIconEl) {
+          avatarEl.src = gAcc.photoURL;
+          avatarEl.onerror = () => {
+            avatarEl.classList.add('hidden');
+            defaultIconEl.classList.remove('hidden');
+          };
+          avatarEl.classList.remove('hidden');
+          defaultIconEl.classList.add('hidden');
+        } else if (avatarEl && defaultIconEl) {
+          avatarEl.classList.add('hidden');
+          defaultIconEl.classList.remove('hidden');
+        }
+      } else {
+        if (accNameEl) accNameEl.textContent = 'Googleアカウント未連携';
+        if (accEmailEl) {
+          accEmailEl.textContent = '';
+          accEmailEl.classList.add('hidden');
+        }
+        if (lblGoogleLogin) lblGoogleLogin.textContent = 'Googleアカウントを選択して連携';
+        if (btnGoogleLogout) btnGoogleLogout.classList.add('hidden');
+        if (modalAvatarEl && modalAvatarPlaceholder) {
+          modalAvatarEl.classList.add('hidden');
+          modalAvatarPlaceholder.classList.remove('hidden');
+          modalAvatarPlaceholder.textContent = 'G';
+        }
+        if (avatarEl && defaultIconEl) {
+          avatarEl.classList.add('hidden');
+          defaultIconEl.classList.remove('hidden');
+        }
+      }
+
+      if (statusMode === 'syncing') {
+        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse';
+        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border border-slate-950 animate-pulse';
+        if (subHeader) subHeader.textContent = 'Google同期中...';
+      } else if (statusMode === 'synced' || (state.sync.ready && isGoogleLinked)) {
+        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900';
+        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-slate-950';
+        if (subHeader) {
+          subHeader.textContent = isGoogleLinked
+            ? (gAcc.email || gAcc.name)
+            : 'クラウド同期中';
+        }
+      } else if (statusMode === 'error') {
+        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-500 border-2 border-slate-900';
+        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 border border-slate-950';
+        if (subHeader) subHeader.textContent = '同期エラー・タップで確認';
+      } else {
+        dotHeader.className = 'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-slate-500 border-2 border-slate-900';
+        dotModal.className = 'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-slate-500 border border-slate-950';
+        if (subHeader) subHeader.textContent = isGoogleLinked ? gAcc.email : 'タップでGoogle連携';
+      }
+
+      if (lastTimeEl) {
+        if (detailText) {
+          lastTimeEl.textContent = detailText;
+        } else if (state.sync.lastSyncedAt) {
+          lastTimeEl.textContent = `最終同期: ${state.sync.lastSyncedAt}`;
+        } else {
+          lastTimeEl.textContent = isGoogleLinked ? '最終同期: 同期準備完了' : '最終同期: 未連携';
+        }
+      }
+    }
+
+    function applyRemoteWorkspaceData(data) {
+      if (!data || typeof data !== 'object') return;
+      state.sync.isApplyingRemote = true;
+      try {
+        if (data.groupsJson) {
+          try {
+            const parsedGroups = JSON.parse(data.groupsJson);
+            if (parsedGroups && Object.keys(parsedGroups).length > 0) {
+              groups = parsedGroups;
+              Object.keys(groups).forEach(gid => {
+                if (state.groupVisible[gid] === undefined) state.groupVisible[gid] = true;
+              });
+            }
+          } catch (_) {}
+        }
+        if (data.recordsJson) {
+          try {
+            const parsedRecords = JSON.parse(data.recordsJson);
+            if (Array.isArray(parsedRecords)) {
+              state.records = parsedRecords;
+            }
+          } catch (_) {}
+        }
+        if (typeof data.declination === 'number' && Number.isFinite(data.declination)) {
+          state.declination = data.declination;
+          const inputDec = document.getElementById('input-declination');
+          if (inputDec) inputDec.value = data.declination.toFixed(1);
+        }
+        if (typeof data.lightMode === 'boolean' && data.lightMode !== state.lightMode) {
+          applyTheme(data.lightMode, true);
+        }
+
+        if (!groups[state.activeGroup]) {
+          state.activeGroup = Object.keys(groups)[0] || 'Loc1';
+        }
+        renderGroupSelectors();
+        renderGroupFilters();
+        renderRecordList();
+        updateGroupCounts();
+        setActiveGroup(state.activeGroup);
+        drawStereonet();
+      } finally {
+        state.sync.isApplyingRemote = false;
+      }
+    }
+
+    async function pushWorkspaceToCloud(showNotification = false) {
+      // RULE 3: Guard every Firestore operation with currentUser check
+      if (!currentUser || !db) {
+        if (showNotification) showToast('クラウド未接続です。バックアップファイル保存をご利用ください', 'error');
+        return false;
+      }
+      const docRef = getActiveWorkspaceDocRef();
+      if (!docRef) return false;
+
+      try {
+        updateSyncUI('syncing');
+        const writeToken = `${currentUser.uid}_${Date.now()}`;
+        state.sync.lastWriteToken = writeToken;
+        const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        await setDoc(docRef, {
+          updatedAt: new Date().toISOString(),
+          updatedBy: currentUser.uid,
+          accountEmail: currentUser.email || null,
+          writeToken: writeToken,
+          declination: Number(state.declination) || 0,
+          lightMode: Boolean(state.lightMode),
+          groupsJson: JSON.stringify(groups),
+          recordsJson: JSON.stringify(state.records),
+          recordCount: state.records.length
+        }, { merge: true });
+
+        state.sync.lastSyncedAt = nowStr;
+        updateSyncUI('synced', `最終同期: ${nowStr} (${state.records.length}件)`);
+        if (showNotification) {
+          showToast(`クラウドに保存しました (${state.records.length}件)`);
+        }
+        return true;
+      } catch (err) {
+        console.warn('Cloud push error:', err);
+        updateSyncUI('error', '同期エラー: 権限または通信を確認してください');
+        if (showNotification) {
+          showToast('クラウド保存に失敗しました', 'error');
+        }
+        return false;
+      }
+    }
+
+    async function pullWorkspaceFromCloud(showNotification = false) {
+      if (!currentUser || !db) {
+        if (showNotification) showToast('クラウド未接続です', 'error');
+        return false;
+      }
+      const docRef = getActiveWorkspaceDocRef();
+      if (!docRef) return false;
+
+      try {
+        updateSyncUI('syncing');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          applyRemoteWorkspaceData(data);
+          const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          state.sync.lastSyncedAt = nowStr;
+          updateSyncUI('synced', `最終同期: ${nowStr} (${state.records.length}件)`);
+          if (showNotification) {
+            showToast(`クラウドからデータを読み込みました (${state.records.length}件)`);
+          }
+          return true;
+        } else {
+          // クラウド側にまだデータがない場合は現在のデータを初期保存
+          await pushWorkspaceToCloud(false);
+          if (showNotification) {
+            showToast('クラウド領域を新規作成し、現在のデータを保存しました');
+          }
+          return true;
+        }
+      } catch (err) {
+        console.warn('Cloud pull error:', err);
+        updateSyncUI('error', 'クラウド取得エラー');
+        if (showNotification) showToast('クラウドからの取得に失敗しました', 'error');
+        return false;
+      }
+    }
+
+    function scheduleCloudSave() {
+      if (!state.sync.autoSync || !state.sync.ready || state.sync.isApplyingRemote) return;
+      clearTimeout(syncDebounceTimer);
+      syncDebounceTimer = setTimeout(() => {
+        pushWorkspaceToCloud(false);
+      }, 650);
+    }
+
+    function attachWorkspaceListener() {
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+      if (!currentUser || !db) return;
+      const docRef = getActiveWorkspaceDocRef();
+      if (!docRef) return;
+
+      // Mandatory error callback on onSnapshot
+      unsubscribeSnapshot = onSnapshot(
+        docRef,
+        (snap) => {
+          if (!snap.exists()) {
+            if (state.records.length > 0) {
+              pushWorkspaceToCloud(false);
+            }
+            return;
+          }
+          const data = snap.data();
+          if (data.writeToken && data.writeToken === state.sync.lastWriteToken) {
+            return; // 自身の直近書き込みはスキップ
+          }
+          applyRemoteWorkspaceData(data);
+          const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          state.sync.lastSyncedAt = nowStr;
+          updateSyncUI('synced', `リアルタイム同期済み: ${nowStr} (${state.records.length}件)`);
+        },
+        (error) => {
+          console.warn('Firestore snapshot listener error:', error);
+          updateSyncUI('error', 'リアルタイム監視が一時停止中');
+        }
+      );
+    }
+
+    async function initCloudSync() {
+      try {
+        if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+          updateSyncUI('idle', 'ローカル動作中（バックアップファイル保存対応）');
+          return;
+        }
+        const firebaseConfig = JSON.parse(__firebase_config);
+        app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        // RULE 3: Authenticate FIRST before any Firestore query
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        currentUser = auth.currentUser;
+        state.sync.ready = Boolean(currentUser);
+
+        if (currentUser) {
+          await loadAccountHistoryFromCloud();
+          updateSyncUI(state.sync.ready ? 'synced' : 'idle');
+          await pullWorkspaceFromCloud(false);
+          attachWorkspaceListener();
+        } else {
+          updateSyncUI('idle');
+        }
+
+        onAuthStateChanged(auth, (user) => {
+          currentUser = user;
+          state.sync.ready = Boolean(user);
+          updateSyncUI(state.sync.ready ? 'synced' : 'idle');
+          if (user) {
+            attachWorkspaceListener();
+          }
+        });
+      } catch (err) {
+        console.warn('Cloud sync initialization skipped or failed:', err);
+        updateSyncUI('idle', 'ローカル動作中（ファイルバックアップ利用可能）');
+      }
+    }
+
+    function applyTheme(isLight, skipCloud = false) {
+      state.lightMode = !!isLight;
+      document.body.classList.toggle('light-mode', state.lightMode);
+
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', state.lightMode ? '#f1f5f9' : '#080c14');
+      }
+
+      const sunIcon = document.getElementById('icon-theme-sun');
+      const moonIcon = document.getElementById('icon-theme-moon');
+      const labelEl = document.getElementById('label-theme-toggle');
+      if (sunIcon && moonIcon && labelEl) {
+        if (state.lightMode) {
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          labelEl.textContent = 'ダーク';
+        } else {
+          sunIcon.classList.remove('hidden');
+          moonIcon.classList.add('hidden');
+          labelEl.textContent = 'ライト';
+        }
+      }
+
+      renderGroupSelectors();
+      renderGroupFilters();
+      drawStereonet();
+      drawBubbleLevel();
+      if (!skipCloud) scheduleCloudSave();
+    }
+
+    function loadSavedTheme() {
+      applyTheme(state.lightMode, true);
+    }
+
+    document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+      applyTheme(!state.lightMode);
+    });
+
+    function loadGroups() {
       Object.keys(groups).forEach(gid => {
         if (state.groupVisible[gid] === undefined) {
           state.groupVisible[gid] = true;
@@ -669,11 +1548,7 @@
     }
 
     function saveGroups() {
-      try {
-        localStorage.setItem('geostereo_groups_v5', JSON.stringify(groups));
-      } catch (e) {
-        console.warn('Groups storage write failed', e);
-      }
+      scheduleCloudSave();
     }
 
     function formatAngle3(deg) {
@@ -749,19 +1624,19 @@
       const isLevel = totalTilt <= 2.0;
       levelReadout.className = 'text-[9px] font-mono leading-none mt-0.5 ' + (isLevel ? 'text-emerald-400 font-bold' : 'text-sky-300');
 
-      // 背景円 (方位磁石と同じ配色)
+      // 背景円 (ライトモード/ダークモード対応)
       levelCtx.beginPath();
       levelCtx.arc(cx, cy, maxR, 0, Math.PI * 2);
-      levelCtx.fillStyle = 'rgba(11, 18, 32, 0.85)';
+      levelCtx.fillStyle = state.lightMode ? 'rgba(255, 255, 255, 0.92)' : 'rgba(11, 18, 32, 0.85)';
       levelCtx.fill();
       levelCtx.lineWidth = 1.5;
-      levelCtx.strokeStyle = isLevel ? '#34d399' : '#334155';
+      levelCtx.strokeStyle = isLevel ? '#10b981' : (state.lightMode ? '#94a3b8' : '#334155');
       levelCtx.stroke();
 
       // 十字線
       levelCtx.beginPath();
       levelCtx.lineWidth = 1;
-      levelCtx.strokeStyle = 'rgba(71, 85, 105, 0.5)';
+      levelCtx.strokeStyle = state.lightMode ? 'rgba(100, 116, 139, 0.45)' : 'rgba(71, 85, 105, 0.5)';
       levelCtx.moveTo(cx - maxR, cy); levelCtx.lineTo(cx + maxR, cy);
       levelCtx.moveTo(cx, cy - maxR); levelCtx.lineTo(cx, cy + maxR);
       levelCtx.stroke();
@@ -814,6 +1689,9 @@
 
       drawStereonet();
       drawBubbleLevel();
+      if (state.view3d.isOpen) {
+        resize3DCanvas();
+      }
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -873,21 +1751,22 @@
       const R = (width / 2) - 18;
       if (R <= 10) return;
 
+      const isLight = state.lightMode;
       ctx.clearRect(0, 0, width, height);
 
       // Primitive background
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.fillStyle = '#090f1d';
+      ctx.fillStyle = isLight ? '#ffffff' : '#090f1d';
       ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = isLight ? '#0284c7' : '#38bdf8';
       ctx.stroke();
 
       // Dip guide rings
       ctx.save();
       ctx.setLineDash([2, 4]);
-      ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
+      ctx.strokeStyle = isLight ? 'rgba(100, 116, 139, 0.35)' : 'rgba(100, 116, 139, 0.3)';
       [20, 40, 60, 80].forEach(dipStep => {
         const psi = dipStep * (Math.PI / 180);
         const rDip = R * Math.SQRT2 * Math.sin(psi / 2);
@@ -899,7 +1778,7 @@
 
       // Axes
       ctx.beginPath();
-      ctx.strokeStyle = 'rgba(71, 85, 105, 0.55)';
+      ctx.strokeStyle = isLight ? 'rgba(100, 116, 139, 0.5)' : 'rgba(71, 85, 105, 0.55)';
       ctx.lineWidth = 1;
       ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R);
       ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy);
@@ -921,7 +1800,9 @@
         const y2 = cy - R * Math.cos(rad);
 
         ctx.beginPath();
-        ctx.strokeStyle = isMajor ? '#64748b' : '#334155';
+        ctx.strokeStyle = isLight
+          ? (isMajor ? '#334155' : '#94a3b8')
+          : (isMajor ? '#64748b' : '#334155');
         ctx.lineWidth = isMajor ? 1.5 : 1;
         ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
         ctx.stroke();
@@ -929,7 +1810,7 @@
 
       ctx.fillStyle = '#ef4444';
       ctx.fillText('N', cx, cy - R - 9);
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = isLight ? '#334155' : '#94a3b8';
       ctx.fillText('E', cx + R + 9, cy);
       ctx.fillText('S', cx, cy + R + 9);
       ctx.fillText('W', cx - R - 9, cy);
@@ -943,7 +1824,7 @@
         const isHovered = (rec.id === hoveredRecordId);
 
         if (state.showGreatCircles) {
-          drawGreatCircle(cx, cy, R, rec.strike, rec.dip, groupCfg.color + (isHovered ? 'ff' : '77'), isHovered ? 2 : 1.2);
+          drawGreatCircle(cx, cy, R, rec.strike, rec.dip, groupCfg.color + (isHovered ? 'ff' : '99'), isHovered ? 2.2 : 1.3);
         }
 
         if (state.showPoles) {
@@ -956,10 +1837,10 @@
           ctx.fillStyle = groupCfg.color;
           ctx.fill();
           ctx.lineWidth = 1;
-          ctx.strokeStyle = '#ffffff';
+          ctx.strokeStyle = isLight ? '#0f172a' : '#ffffff';
           ctx.stroke();
 
-          ctx.fillStyle = isHovered ? '#fbbf24' : 'rgba(226, 232, 240, 0.75)';
+          ctx.fillStyle = isHovered ? '#d97706' : (isLight ? '#0f172a' : 'rgba(226, 232, 240, 0.75)');
           ctx.font = '8px monospace';
           ctx.fillText(`${(groupCfg.label || 'G')[0]}${rec.id}`, px + 7, py - 3);
         }
@@ -1003,7 +1884,7 @@
 
       // 3. Draw Live (Current) Orientation
       if (state.current.dip >= 0) {
-        const activeGroupCfg = groups[state.activeGroup] || { color: '#06b6d4', label: 'Y面' };
+        const activeGroupCfg = groups[state.activeGroup] || { color: '#06b6d4', label: 'Loc. 1' };
 
         if (state.showGreatCircles) {
           drawGreatCircle(cx, cy, R, state.current.strike, state.current.dip, activeGroupCfg.color, 2.4);
@@ -1027,6 +1908,10 @@
           ctx.strokeStyle = '#ffffff';
           ctx.stroke();
         }
+      }
+
+      if (state.view3d.isOpen) {
+        draw3DStereonet();
       }
     }
 
@@ -1084,6 +1969,718 @@
       ctx.lineWidth = lineWidth;
       ctx.stroke();
     }
+
+    /* =========================================================================
+       Stereonet 11 Style 3D Lower Hemisphere Renderer (Offline HTML5 Canvas)
+       World Coordinates: +X = East, +Y = North, +Z = Up (Lower Hemisphere: Z <= 0)
+       ========================================================================= */
+    const modal3d = document.getElementById('modal-3d');
+    const canvas3d = document.getElementById('stereonet-3d-canvas');
+    const ctx3d = canvas3d.getContext('2d');
+    const tooltip3d = document.getElementById('stereonet-3d-tooltip');
+    let projected3DPoles = []; // Stored for tap/click hit-testing on 3D poles
+
+    function hexToRgba(hex, alpha) {
+      let c = (hex || '#06b6d4').replace('#', '');
+      if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+      const num = parseInt(c, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function resize3DCanvas() {
+      const wrapper = document.getElementById('canvas-3d-wrapper');
+      if (!wrapper) return;
+      const rect = wrapper.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas3d.width = rect.width * dpr;
+      canvas3d.height = rect.height * dpr;
+      ctx3d.setTransform(1, 0, 0, 1, 0, 0);
+      ctx3d.scale(dpr, dpr);
+      draw3DStereonet();
+    }
+
+    /* Build camera basis & project a 3D point (x, y, z) on the unit sphere
+       Supports full 360° azimuth and full 360° elevation (including -90° Nadir / directly from below) */
+    function create3DProjector(width, height) {
+      const azRad = state.view3d.camAz * (Math.PI / 180);
+      const elRad = state.view3d.camEl * (Math.PI / 180);
+
+      const sinAz = Math.sin(azRad), cosAz = Math.cos(azRad);
+      const sinEl = Math.sin(elRad), cosEl = Math.cos(elRad);
+
+      // Camera direction vector pointing from origin toward camera
+      // When camEl = +90° (Zenith/Top), f = (0, 0, +1)
+      // When camEl = -90° (Nadir/Bottom), f = (0, 0, -1)
+      const fx = sinAz * cosEl;
+      const fy = cosAz * cosEl;
+      const fz = sinEl;
+
+      // Right vector on screen
+      const rx = -cosAz;
+      const ry = sinAz;
+      const rz = 0;
+
+      // Up vector on screen (orthonormal right-handed basis: r × u = f)
+      const ux = -sinAz * sinEl;
+      const uy = -cosAz * sinEl;
+      const uz = cosEl;
+
+      const cx = width / 2;
+      // Dynamically adjust vertical center: dead-center at ±90°, slightly raised when viewing horizontally
+      const cy = height * 0.5 - (cosEl * Math.sin(Math.abs(elRad)) * height * 0.05) - (cosEl * height * 0.04);
+      const baseScale = Math.min(width, height) * 0.39 * state.view3d.zoom;
+      const camDist = 3.4;
+
+      return function project3D(x, y, z) {
+        const vx = x * rx + y * ry + z * rz;
+        const vy = x * ux + y * uy + z * uz;
+        // vz > 0 means closer to the camera than the origin
+        const vz = x * fx + y * fy + z * fz;
+
+        let factor = baseScale;
+        if (state.view3d.perspective) {
+          const denom = Math.max(0.8, camDist - vz);
+          factor = baseScale * (camDist / denom);
+        }
+
+        return {
+          sx: cx + vx * factor,
+          sy: cy - vy * factor,
+          depth: vz,
+          scale: factor
+        };
+      };
+    }
+
+    /* Compute 3D unit vectors for a geological plane (Strike RHR, Dip) */
+    function getPlane3DVectors(strikeDeg, dipDeg) {
+      const sRad = strikeDeg * (Math.PI / 180);
+      const dRad = dipDeg * (Math.PI / 180);
+      const ddDeg = (strikeDeg + 90) % 360;
+      const ddRad = ddDeg * (Math.PI / 180);
+
+      // Unit vector along strike (horizontal, z = 0)
+      const uStrike = { x: Math.sin(sRad), y: Math.cos(sRad), z: 0 };
+      // Unit vector along true dip (pointing down into lower hemisphere, z <= 0)
+      const uDip = {
+        x: Math.sin(ddRad) * Math.cos(dRad),
+        y: Math.cos(ddRad) * Math.cos(dRad),
+        z: -Math.sin(dRad)
+      };
+
+      // Pole to the plane in the lower hemisphere (z <= 0)
+      const poleTrendDeg = (ddDeg + 180) % 360;
+      const polePlungeDeg = 90 - dipDeg;
+      const ptRad = poleTrendDeg * (Math.PI / 180);
+      const ppRad = polePlungeDeg * (Math.PI / 180);
+      const uPole = {
+        x: Math.sin(ptRad) * Math.cos(ppRad),
+        y: Math.cos(ptRad) * Math.cos(ppRad),
+        z: -Math.sin(ppRad)
+      };
+
+      return { uStrike, uDip, uPole, poleTrendDeg, polePlungeDeg };
+    }
+
+    function draw3DStereonet() {
+      if (!state.view3d.isOpen) return;
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas3d.width / dpr;
+      const height = canvas3d.height / dpr;
+      if (width === 0 || height === 0) return;
+
+      const isClassic = state.lightMode;
+      ctx3d.clearRect(0, 0, width, height);
+
+      // Fill background according to global Light / Dark mode
+      ctx3d.fillStyle = isClassic ? '#f8fafc' : '#050914';
+      ctx3d.fillRect(0, 0, width, height);
+
+      const project = create3DProjector(width, height);
+      const renderQueue = [];
+      projected3DPoles = [];
+
+      // Update HUD labels with signed elevation & view orientation description
+      const elRounded = Math.round(state.view3d.camEl);
+      document.getElementById('lbl-3d-az').textContent = `${formatAngle3(state.view3d.camAz)}°`;
+      document.getElementById('lbl-3d-el').textContent = `${elRounded >= 0 ? '+' : ''}${elRounded}°`;
+      document.getElementById('lbl-3d-proj').textContent = state.view3d.perspective ? '透視(3D)' : '平行(Ortho)';
+
+      const viewDescEl = document.getElementById('lbl-3d-hemisphere-view');
+      if (viewDescEl) {
+        if (elRounded >= 75 && elRounded <= 105) viewDescEl.textContent = '真上視 (Zenith)';
+        else if (elRounded <= -75 && elRounded >= -105) viewDescEl.textContent = '真下視 (Nadir・底面)';
+        else if (Math.abs(elRounded) > 105) viewDescEl.textContent = '反転視 (背面360°)';
+        else if (elRounded < -5) viewDescEl.textContent = '下方仰視 (下半球外面)';
+        else if (elRounded <= 5) viewDescEl.textContent = '水平側面視';
+        else viewDescEl.textContent = '上方俯瞰 (下半球内面)';
+      }
+
+      const visibleRecords = state.records.filter(r => state.groupVisible[r.group]);
+      document.getElementById('lbl-3d-count').textContent = visibleRecords.length;
+
+      // 1. Build Lower Hemisphere Bowl Surface Patches & Grid (z <= 0)
+      const azSteps = 24; // Every 15 deg
+      const plSteps = 6;  // Every 15 deg from plunge 0 to 90
+      for (let i = 0; i < azSteps; i++) {
+        const az0 = (i / azSteps) * Math.PI * 2;
+        const az1 = ((i + 1) / azSteps) * Math.PI * 2;
+        for (let j = 0; j < plSteps; j++) {
+          const pl0 = (j / plSteps) * (Math.PI / 2);
+          const pl1 = ((j + 1) / plSteps) * (Math.PI / 2);
+
+          const p00 = project(Math.sin(az0)*Math.cos(pl0), Math.cos(az0)*Math.cos(pl0), -Math.sin(pl0));
+          const p10 = project(Math.sin(az1)*Math.cos(pl0), Math.cos(az1)*Math.cos(pl0), -Math.sin(pl0));
+          const p11 = project(Math.sin(az1)*Math.cos(pl1), Math.cos(az1)*Math.cos(pl1), -Math.sin(pl1));
+          const p01 = project(Math.sin(az0)*Math.cos(pl1), Math.cos(az0)*Math.cos(pl1), -Math.sin(pl1));
+
+          const avgDepth = (p00.depth + p10.depth + p11.depth + p01.depth) / 4;
+          // Keep bowl quad slightly behind surface arcs/poles so great circles and poles on the skin remain crisp from both above and below
+          renderQueue.push({
+            depth: avgDepth - 0.035,
+            draw: () => {
+              ctx3d.beginPath();
+              ctx3d.moveTo(p00.sx, p00.sy);
+              ctx3d.lineTo(p10.sx, p10.sy);
+              ctx3d.lineTo(p11.sx, p11.sy);
+              ctx3d.lineTo(p01.sx, p01.sy);
+              ctx3d.closePath();
+              ctx3d.fillStyle = isClassic
+                ? (j % 2 === 0 ? 'rgba(224, 242, 254, 0.36)' : 'rgba(186, 230, 253, 0.36)')
+                : (j % 2 === 0 ? 'rgba(15, 23, 42, 0.44)' : 'rgba(30, 41, 59, 0.40)');
+              ctx3d.fill();
+              ctx3d.strokeStyle = isClassic ? 'rgba(14, 116, 144, 0.22)' : 'rgba(71, 85, 105, 0.28)';
+              ctx3d.lineWidth = 0.7;
+              ctx3d.stroke();
+            }
+          });
+        }
+      }
+
+      // 2. Equatorial Axis Lines (N-S, E-W at z=0, and Center-to-Nadir vertical axis)
+      const axisSegments = [
+        { a: {x: 0, y: -1, z: 0}, b: {x: 0, y: 1, z: 0}, color: isClassic ? 'rgba(15,23,42,0.4)' : 'rgba(148,163,184,0.45)' },
+        { a: {x: -1, y: 0, z: 0}, b: {x: 1, y: 0, z: 0}, color: isClassic ? 'rgba(15,23,42,0.4)' : 'rgba(148,163,184,0.45)' },
+        { a: {x: 0, y: 0, z: 0}, b: {x: 0, y: 0, z: -1}, color: isClassic ? 'rgba(14,116,144,0.45)' : 'rgba(56,189,248,0.45)' }
+      ];
+      axisSegments.forEach(seg => {
+        const pa = project(seg.a.x, seg.a.y, seg.a.z);
+        const pb = project(seg.b.x, seg.b.y, seg.b.z);
+        renderQueue.push({
+          depth: (pa.depth + pb.depth) / 2,
+          draw: () => {
+            ctx3d.save();
+            ctx3d.setLineDash([3, 3]);
+            ctx3d.beginPath();
+            ctx3d.moveTo(pa.sx, pa.sy);
+            ctx3d.lineTo(pb.sx, pb.sy);
+            ctx3d.strokeStyle = seg.color;
+            ctx3d.lineWidth = 1;
+            ctx3d.stroke();
+            ctx3d.restore();
+          }
+        });
+      });
+
+      // Helper to enqueue a geological plane (great circle arc, 3D half-disk plane, pole, normal vector)
+      function enqueuePlane3D(opts) {
+        const { strike, dip, color, label, recId, isMean, isLive, isSelected, recordObj } = opts;
+        const { uStrike, uDip, uPole } = getPlane3DVectors(strike, dip);
+        const pCenter = project(0, 0, 0);
+
+        const arcSteps = 36;
+        const arcPts3D = [];
+        const arcPts2D = [];
+        for (let i = 0; i <= arcSteps; i++) {
+          const alpha = (i / arcSteps) * Math.PI;
+          const cosA = Math.cos(alpha);
+          const sinA = Math.sin(alpha);
+          const x = cosA * uStrike.x + sinA * uDip.x;
+          const y = cosA * uStrike.y + sinA * uDip.y;
+          const z = cosA * uStrike.z + sinA * uDip.z;
+          arcPts3D.push({ x, y, z });
+          arcPts2D.push(project(x, y, z));
+        }
+
+        // A. 3D Inclined Half-Disk Plane (from horizontal strike diameter down to the lower-hemisphere great circle)
+        if (state.view3d.showPlanes && (!isMean || state.view3d.showMeans)) {
+          const fillAlpha = isLive ? 0.34 : (isSelected ? 0.42 : (isMean ? 0.22 : 0.18));
+          for (let i = 0; i < arcSteps; i++) {
+            const p1 = arcPts2D[i];
+            const p2 = arcPts2D[i + 1];
+            const triDepth = (pCenter.depth + p1.depth + p2.depth) / 3;
+            renderQueue.push({
+              depth: triDepth,
+              draw: () => {
+                ctx3d.beginPath();
+                ctx3d.moveTo(pCenter.sx, pCenter.sy);
+                ctx3d.lineTo(p1.sx, p1.sy);
+                ctx3d.lineTo(p2.sx, p2.sy);
+                ctx3d.closePath();
+                ctx3d.fillStyle = hexToRgba(color, fillAlpha);
+                ctx3d.fill();
+              }
+            });
+          }
+
+          // Strike diameter line at z = 0 & True Dip vector line from center to maximum dip point
+          const pStrikeStart = arcPts2D[0];
+          const pStrikeEnd = arcPts2D[arcSteps];
+          const pMaxDip = arcPts2D[Math.floor(arcSteps / 2)];
+          renderQueue.push({
+            depth: (pStrikeStart.depth + pStrikeEnd.depth) / 2 + 0.002,
+            draw: () => {
+              ctx3d.beginPath();
+              ctx3d.moveTo(pStrikeStart.sx, pStrikeStart.sy);
+              ctx3d.lineTo(pStrikeEnd.sx, pStrikeEnd.sy);
+              ctx3d.strokeStyle = hexToRgba(color, isLive || isSelected ? 0.85 : 0.45);
+              ctx3d.lineWidth = isLive || isSelected ? 1.5 : 0.9;
+              ctx3d.stroke();
+
+              // True dip direction indicator line from center (0,0,0) to deepest point on arc
+              ctx3d.beginPath();
+              ctx3d.moveTo(pCenter.sx, pCenter.sy);
+              ctx3d.lineTo(pMaxDip.sx, pMaxDip.sy);
+              ctx3d.strokeStyle = hexToRgba(color, isLive || isSelected ? 0.95 : 0.55);
+              ctx3d.lineWidth = isLive || isSelected ? 1.6 : 1.0;
+              ctx3d.stroke();
+            }
+          });
+        }
+
+        // B. Great Circle Arc on the Lower Hemisphere Bowl
+        if (state.view3d.showGC) {
+          for (let i = 0; i < arcSteps; i++) {
+            const p1 = arcPts2D[i];
+            const p2 = arcPts2D[i + 1];
+            const segDepth = (p1.depth + p2.depth) / 2 + 0.008;
+            renderQueue.push({
+              depth: segDepth,
+              draw: () => {
+                ctx3d.save();
+                if (isMean) ctx3d.setLineDash([5, 3]);
+                ctx3d.beginPath();
+                ctx3d.moveTo(p1.sx, p1.sy);
+                ctx3d.lineTo(p2.sx, p2.sy);
+                ctx3d.strokeStyle = isSelected ? '#fbbf24' : color;
+                ctx3d.lineWidth = isLive ? 3.0 : (isSelected ? 3.2 : (isMean ? 2.5 : 1.8));
+                ctx3d.lineCap = 'round';
+                ctx3d.stroke();
+                ctx3d.restore();
+              }
+            });
+          }
+        }
+
+        // C. Normal Vector Line from Center (0,0,0) to Pole on Lower Hemisphere
+        const pPole = project(uPole.x, uPole.y, uPole.z);
+        if (state.view3d.showNormals && state.view3d.showPoles) {
+          renderQueue.push({
+            depth: (pCenter.depth + pPole.depth) / 2 + 0.005,
+            draw: () => {
+              ctx3d.save();
+              ctx3d.setLineDash([2, 3]);
+              ctx3d.beginPath();
+              ctx3d.moveTo(pCenter.sx, pCenter.sy);
+              ctx3d.lineTo(pPole.sx, pPole.sy);
+              ctx3d.strokeStyle = hexToRgba(color, isLive || isSelected ? 0.95 : 0.65);
+              ctx3d.lineWidth = isLive || isSelected ? 1.8 : 1.1;
+              ctx3d.stroke();
+              ctx3d.restore();
+            }
+          });
+        }
+
+        // D. Pole Point on the Lower Hemisphere Surface
+        if (state.view3d.showPoles) {
+          if (recordObj) {
+            projected3DPoles.push({
+              sx: pPole.sx,
+              sy: pPole.sy,
+              depth: pPole.depth,
+              rec: recordObj,
+              color: color
+            });
+          }
+
+          renderQueue.push({
+            depth: pPole.depth + 0.02,
+            draw: () => {
+              if (isMean) {
+                // Diamond marker for group mean pole
+                const r = 6.5;
+                ctx3d.save();
+                ctx3d.beginPath();
+                ctx3d.moveTo(pPole.sx, pPole.sy - r);
+                ctx3d.lineTo(pPole.sx + r, pPole.sy);
+                ctx3d.lineTo(pPole.sx, pPole.sy + r);
+                ctx3d.lineTo(pPole.sx - r, pPole.sy);
+                ctx3d.closePath();
+                ctx3d.fillStyle = color;
+                ctx3d.fill();
+                ctx3d.lineWidth = 1.6;
+                ctx3d.strokeStyle = isClassic ? '#0f172a' : '#ffffff';
+                ctx3d.stroke();
+                ctx3d.restore();
+              } else {
+                // Glowing halo for live or selected pole
+                if (isLive || isSelected) {
+                  ctx3d.beginPath();
+                  ctx3d.arc(pPole.sx, pPole.sy, 9.5, 0, Math.PI * 2);
+                  ctx3d.fillStyle = isSelected ? 'rgba(251, 191, 36, 0.35)' : hexToRgba(color, 0.35);
+                  ctx3d.fill();
+                }
+
+                const radius = isLive ? 5.5 : (isSelected ? 6.2 : 4.5);
+                ctx3d.beginPath();
+                ctx3d.arc(pPole.sx, pPole.sy, radius, 0, Math.PI * 2);
+                ctx3d.fillStyle = isSelected ? '#fbbf24' : color;
+                ctx3d.fill();
+                ctx3d.lineWidth = 1.3;
+                ctx3d.strokeStyle = isClassic ? '#0f172a' : '#ffffff';
+                ctx3d.stroke();
+
+                if (label) {
+                  ctx3d.font = isSelected ? 'bold 10px monospace' : '9px monospace';
+                  ctx3d.fillStyle = isSelected
+                    ? '#fbbf24'
+                    : (isClassic ? '#0f172a' : 'rgba(241, 245, 249, 0.9)');
+                  ctx3d.fillText(label, pPole.sx + 7, pPole.sy - 4);
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // 3. Enqueue Recorded Measurements
+      visibleRecords.forEach(rec => {
+        const g = groups[rec.group] || { color: '#94a3b8', label: rec.group };
+        const isSelected = (state.view3d.selectedRecordId === rec.id);
+        enqueuePlane3D({
+          strike: rec.strike,
+          dip: rec.dip,
+          color: g.color,
+          label: `${(g.label || 'G')[0]}${rec.id}`,
+          recId: rec.id,
+          isMean: false,
+          isLive: false,
+          isSelected: isSelected,
+          recordObj: rec
+        });
+      });
+
+      // 4. Enqueue Group Means
+      if (state.view3d.showMeans) {
+        Object.keys(groups).forEach(gId => {
+          if (!state.groupVisible[gId]) return;
+          const avg = computeGroupAverage(gId);
+          if (avg && avg.count >= 2) {
+            const g = groups[gId];
+            enqueuePlane3D({
+              strike: avg.strike,
+              dip: avg.dip,
+              color: g.color,
+              label: `${g.label}平均`,
+              isMean: true,
+              isLive: false,
+              isSelected: false
+            });
+          }
+        });
+      }
+
+      // 5. Equatorial Primitive Rim (z = 0) & Degree Ticks & Cardinal Labels (N, E, S, W)
+      const rimSteps = 72;
+      for (let i = 0; i < rimSteps; i++) {
+        const a0 = (i / rimSteps) * Math.PI * 2;
+        const a1 = ((i + 1) / rimSteps) * Math.PI * 2;
+        const p0 = project(Math.sin(a0), Math.cos(a0), 0);
+        const p1 = project(Math.sin(a1), Math.cos(a1), 0);
+        renderQueue.push({
+          depth: (p0.depth + p1.depth) / 2 + 0.015,
+          draw: () => {
+            ctx3d.beginPath();
+            ctx3d.moveTo(p0.sx, p0.sy);
+            ctx3d.lineTo(p1.sx, p1.sy);
+            ctx3d.strokeStyle = isClassic ? '#0284c7' : '#38bdf8';
+            ctx3d.lineWidth = 2.2;
+            ctx3d.stroke();
+          }
+        });
+      }
+
+      // Ticks every 10° on the equatorial rim
+      for (let deg = 0; deg < 360; deg += 10) {
+        const rad = deg * (Math.PI / 180);
+        const isMajor = deg % 30 === 0;
+        const innerR = isMajor ? 0.94 : 0.965;
+        const pIn = project(innerR * Math.sin(rad), innerR * Math.cos(rad), 0);
+        const pOut = project(Math.sin(rad), Math.cos(rad), 0);
+        renderQueue.push({
+          depth: pOut.depth + 0.016,
+          draw: () => {
+            ctx3d.beginPath();
+            ctx3d.moveTo(pIn.sx, pIn.sy);
+            ctx3d.lineTo(pOut.sx, pOut.sy);
+            ctx3d.strokeStyle = isClassic
+              ? (isMajor ? '#0f172a' : '#64748b')
+              : (isMajor ? '#cbd5e1' : '#64748b');
+            ctx3d.lineWidth = isMajor ? 1.5 : 1;
+            ctx3d.stroke();
+          }
+        });
+      }
+
+      // Cardinal Labels (N, E, S, W) + Nadir Marker
+      const cardinals = [
+        { label: 'N', x: 0, y: 1.13, z: 0, color: '#ef4444', size: 'bold 13px var(--font-sans)' },
+        { label: 'E', x: 1.13, y: 0, z: 0, color: isClassic ? '#0f172a' : '#cbd5e1', size: 'bold 11px var(--font-sans)' },
+        { label: 'S', x: 0, y: -1.13, z: 0, color: isClassic ? '#0f172a' : '#cbd5e1', size: 'bold 11px var(--font-sans)' },
+        { label: 'W', x: -1.13, y: 0, z: 0, color: isClassic ? '#0f172a' : '#cbd5e1', size: 'bold 11px var(--font-sans)' }
+      ];
+      cardinals.forEach(c => {
+        const pc = project(c.x, c.y, c.z);
+        renderQueue.push({
+          depth: pc.depth + 0.03,
+          draw: () => {
+            ctx3d.save();
+            ctx3d.font = c.size;
+            ctx3d.fillStyle = c.color;
+            ctx3d.textAlign = 'center';
+            ctx3d.textBaseline = 'middle';
+            ctx3d.fillText(c.label, pc.sx, pc.sy);
+            ctx3d.restore();
+          }
+        });
+      });
+
+      // Sort back-to-front (Painter's Algorithm) and draw
+      renderQueue.sort((a, b) => a.depth - b.depth);
+      renderQueue.forEach(item => item.draw());
+    }
+
+    function render3DModalGroupFilters() {
+      const container = document.getElementById('modal-3d-group-filters');
+      if (!container) return;
+      container.innerHTML = '';
+      Object.values(groups).forEach(g => {
+        const count = state.records.filter(r => r.group === g.id).length;
+        const on = state.groupVisible[g.id] !== false;
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition';
+        chip.style.color = on ? g.color : '#64748b';
+        chip.style.borderColor = on ? g.color : '#1e293b';
+        chip.style.backgroundColor = on ? `${g.color}22` : '#020617';
+        chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full" style="background:${g.color}"></span><span>${g.label}</span><span class="font-mono opacity-80">(${count})</span>`;
+        chip.addEventListener('click', () => {
+          state.groupVisible[g.id] = state.groupVisible[g.id] === false;
+          renderGroupFilters();
+          render3DModalGroupFilters();
+          drawStereonet();
+        });
+        container.appendChild(chip);
+      });
+    }
+
+    function open3DModal() {
+      state.view3d.isOpen = true;
+      modal3d.classList.remove('hidden');
+      render3DModalGroupFilters();
+      requestAnimationFrame(() => {
+        resize3DCanvas();
+      });
+    }
+
+    function close3DModal() {
+      state.view3d.isOpen = false;
+      modal3d.classList.add('hidden');
+    }
+
+    document.getElementById('btn-open-3d').addEventListener('click', open3DModal);
+    document.getElementById('btn-close-3d').addEventListener('click', close3DModal);
+    modal3d.addEventListener('click', (e) => {
+      if (e.target === modal3d) close3DModal();
+    });
+
+    // Projection Mode & PNG Export
+    document.getElementById('btn-3d-proj-mode').addEventListener('click', () => {
+      state.view3d.perspective = !state.view3d.perspective;
+      draw3DStereonet();
+    });
+
+    document.getElementById('btn-3d-png').addEventListener('click', () => {
+      try {
+        canvas3d.toBlob(blob => {
+          if (!blob) return;
+          downloadBlob(blob, `GeoStereo_3D_${exportTimestamp()}.png`);
+          showToast('3D下半球ステレオネット画像を保存しました');
+        }, 'image/png');
+      } catch (err) {
+        showToast('画像保存に失敗しました', 'error');
+      }
+    });
+
+    // Viewpoint Preset Buttons (including Oblique Bottom & Nadir -90°)
+    document.querySelectorAll('.btn-3d-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.getAttribute('data-3d-view');
+        if (view === 'default') { state.view3d.camAz = 155; state.view3d.camEl = 32; state.view3d.zoom = 1.0; }
+        else if (view === 'bottom-oblique') { state.view3d.camAz = 155; state.view3d.camEl = -35; state.view3d.zoom = 1.0; }
+        else if (view === 'top') { state.view3d.camAz = 180; state.view3d.camEl = 90; state.view3d.zoom = 1.05; }
+        else if (view === 'bottom') { state.view3d.camAz = 180; state.view3d.camEl = -90; state.view3d.zoom = 1.05; }
+        else if (view === 'south') { state.view3d.camAz = 180; state.view3d.camEl = 15; state.view3d.zoom = 1.0; }
+        else if (view === 'east') { state.view3d.camAz = 90; state.view3d.camEl = 15; state.view3d.zoom = 1.0; }
+        else if (view === 'north') { state.view3d.camAz = 0; state.view3d.camEl = 15; state.view3d.zoom = 1.0; }
+        else if (view === 'west') { state.view3d.camAz = 270; state.view3d.camEl = 15; state.view3d.zoom = 1.0; }
+        draw3DStereonet();
+      });
+    });
+
+    // Element Checkboxes inside 3D Modal
+    const bind3DCheckbox = (id, key) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('change', (e) => {
+        state.view3d[key] = e.target.checked;
+        draw3DStereonet();
+      });
+    };
+    bind3DCheckbox('chk-3d-gc', 'showGC');
+    bind3DCheckbox('chk-3d-planes', 'showPlanes');
+    bind3DCheckbox('chk-3d-poles', 'showPoles');
+    bind3DCheckbox('chk-3d-normals', 'showNormals');
+    bind3DCheckbox('chk-3d-means', 'showMeans');
+
+    // Unclamped 360° rotation helper for both mouse and touch
+    function rotate3DCamera(dx, dy) {
+      const cosEl = Math.cos(state.view3d.camEl * (Math.PI / 180));
+      const azSign = cosEl >= 0 ? 1 : -1;
+      state.view3d.camAz = (state.view3d.camAz - dx * 0.65 * azSign + 360) % 360;
+
+      let nextEl = state.view3d.camEl + dy * 0.6;
+      // Wrap elevation smoothly into [-180°, +180°] for full 360° vertical rotation
+      nextEl = ((nextEl + 180) % 360 + 360) % 360 - 180;
+      state.view3d.camEl = nextEl;
+    }
+
+    // Mouse & Touch Interaction on 3D Canvas
+    let isDragging3D = false;
+    let dragMoved3D = false;
+    let lastX3D = 0, lastY3D = 0;
+    let pinchDist3D = null;
+
+    canvas3d.addEventListener('mousedown', (e) => {
+      isDragging3D = true;
+      dragMoved3D = false;
+      lastX3D = e.clientX;
+      lastY3D = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging3D || !state.view3d.isOpen) return;
+      const dx = e.clientX - lastX3D;
+      const dy = e.clientY - lastY3D;
+      if (Math.hypot(dx, dy) > 3) dragMoved3D = true;
+      lastX3D = e.clientX;
+      lastY3D = e.clientY;
+
+      rotate3DCamera(dx, dy);
+      draw3DStereonet();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging3D = false;
+    });
+
+    canvas3d.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.92 : 1.08;
+      state.view3d.zoom = Math.max(0.65, Math.min(2.2, state.view3d.zoom * delta));
+      draw3DStereonet();
+    }, { passive: false });
+
+    canvas3d.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging3D = true;
+        dragMoved3D = false;
+        lastX3D = e.touches[0].clientX;
+        lastY3D = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        isDragging3D = false;
+        pinchDist3D = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+
+    canvas3d.addEventListener('touchmove', (e) => {
+      if (!state.view3d.isOpen) return;
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging3D) {
+        const dx = e.touches[0].clientX - lastX3D;
+        const dy = e.touches[0].clientY - lastY3D;
+        if (Math.hypot(dx, dy) > 3) dragMoved3D = true;
+        lastX3D = e.touches[0].clientX;
+        lastY3D = e.touches[0].clientY;
+
+        rotate3DCamera(dx, dy);
+        draw3DStereonet();
+      } else if (e.touches.length === 2 && pinchDist3D !== null) {
+        const newDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (pinchDist3D > 10) {
+          const ratio = newDist / pinchDist3D;
+          state.view3d.zoom = Math.max(0.65, Math.min(2.2, state.view3d.zoom * ratio));
+          draw3DStereonet();
+        }
+        pinchDist3D = newDist;
+      }
+    }, { passive: false });
+
+    canvas3d.addEventListener('touchend', () => {
+      isDragging3D = false;
+      pinchDist3D = null;
+    });
+
+    // Click / Tap on 3D Pole to inspect measurement
+    canvas3d.addEventListener('click', (e) => {
+      if (dragMoved3D) return;
+      const rect = canvas3d.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let nearest = null;
+      let minDist = 20;
+      projected3DPoles.forEach(p => {
+        const d = Math.hypot(clickX - p.sx, clickY - p.sy);
+        if (d < minDist) {
+          minDist = d;
+          nearest = p;
+        }
+      });
+
+      if (nearest && nearest.rec) {
+        const rec = nearest.rec;
+        state.view3d.selectedRecordId = rec.id;
+        hoveredRecordId = rec.id;
+        const g = groups[rec.group] || { color: '#94a3b8', label: rec.groupLabel || rec.group };
+        tooltip3d.innerHTML = `<span style="color:${g.color};font-weight:bold;">[${g.label}] #${rec.id}</span> 走向:<span class="text-white font-bold">${formatAngle3(rec.strike)}°(${rec.quadrant})</span> 傾斜:<span class="text-white font-bold">${rec.dip}°${rec.cardinal}</span> | 極:${formatAngle3(rec.poleTrend)}°/${rec.polePlunge}° ${rec.note ? '・' + rec.note : ''}`;
+      } else {
+        state.view3d.selectedRecordId = null;
+        tooltip3d.textContent = '下半球ボウルをドラッグして回転 / 極点(●)をタップで測定値の詳細を表示';
+      }
+      draw3DStereonet();
+      drawStereonet();
+    });
 
     function updateCompass(headingDeg) {
       const roseEl = document.getElementById('compass-rose');
@@ -1317,9 +2914,9 @@
           btn.style.color = g.color;
           btn.style.boxShadow = `0 0 0 1px ${g.color}`;
         } else {
-          btn.style.backgroundColor = '#020617';
-          btn.style.borderColor = '#1e293b';
-          btn.style.color = '#94a3b8';
+          btn.style.backgroundColor = state.lightMode ? '#f8fafc' : '#020617';
+          btn.style.borderColor = state.lightMode ? '#cbd5e1' : '#1e293b';
+          btn.style.color = state.lightMode ? '#334155' : '#94a3b8';
           btn.style.boxShadow = 'none';
         }
 
@@ -1358,6 +2955,7 @@
         state.groupVisible[g.id] = state.groupVisible[g.id] === false;
         styleFilterChip(chip, g);
         updateFilterDetailBadge();
+        if (state.view3d.isOpen) render3DModalGroupFilters();
         drawStereonet();
       });
       return chip;
@@ -1367,8 +2965,8 @@
       const on = state.groupVisible[g.id] !== false;
       chip.setAttribute('aria-pressed', on ? 'true' : 'false');
       chip.style.color = on ? g.color : '#64748b';
-      chip.style.borderColor = on ? g.color : '#1e293b';
-      chip.style.backgroundColor = on ? `${g.color}22` : '#020617';
+      chip.style.borderColor = on ? g.color : (state.lightMode ? '#cbd5e1' : '#1e293b');
+      chip.style.backgroundColor = on ? `${g.color}22` : (state.lightMode ? '#f8fafc' : '#020617');
       chip.style.opacity = on ? '1' : '0.7';
     }
 
@@ -1409,6 +3007,7 @@
       }
       setFilterDetailOpen(filterDetailOpen && rest.length > 0);
       updateFilterDetailBadge();
+      if (state.view3d.isOpen) render3DModalGroupFilters();
     }
 
     document.getElementById('btn-filter-detail').addEventListener('click', () => setFilterDetailOpen(!filterDetailOpen));
@@ -1422,7 +3021,7 @@
 
     function setActiveGroup(groupId) {
       if (!groups[groupId]) {
-        groupId = Object.keys(groups)[0] || 'Y';
+        groupId = Object.keys(groups)[0] || 'Loc1';
       }
       state.activeGroup = groupId;
       const g = groups[groupId];
@@ -1458,26 +3057,15 @@
     const inputNote = document.getElementById('input-note');
 
     function loadSavedRecords() {
-      try {
-        const saved = localStorage.getItem('geostereo_records_v4');
-        if (saved) {
-          state.records = JSON.parse(saved);
-        }
-      } catch (e) {
-        console.warn('Storage read failed', e);
-      }
       renderRecordList();
       updateGroupCounts();
       drawStereonet();
     }
 
     function saveRecords() {
-      try {
-        localStorage.setItem('geostereo_records_v4', JSON.stringify(state.records));
-      } catch (e) {
-        console.warn('Storage write failed', e);
-      }
       updateGroupCounts();
+      if (state.view3d.isOpen) render3DModalGroupFilters();
+      scheduleCloudSave();
     }
 
     function updateGroupCounts() {
@@ -2111,20 +3699,14 @@
       if (!Number.isFinite(val)) throw new Error('偏角値が不正です。');
       state.declination = val;
       inputDeclination.value = val.toFixed(1);
-      try { localStorage.setItem('geostereo_declination', String(val)); } catch (_) {}
       gpsDeclinationStatus.textContent = sourceText || `手動偏角: ${val >= 0 ? '+' : ''}${val.toFixed(1)}°（東偏＋ / 西偏−）`;
       if (state.isSimMode) updateSimulator();
       else drawStereonet();
+      scheduleCloudSave();
     }
 
     function loadSavedDeclination() {
-      try {
-        const saved = localStorage.getItem('geostereo_declination');
-        if (saved !== null && Number.isFinite(parseFloat(saved))) {
-          const v = parseFloat(saved);
-          setDeclinationValue(v, `保存済み偏角: ${v >= 0 ? '+' : ''}${v.toFixed(1)}°（オフラインでも使用）`);
-        }
-      } catch (_) {}
+      setDeclinationValue(state.declination, `手動偏角: ${state.declination >= 0 ? '+' : ''}${state.declination.toFixed(1)}°（東偏＋ / 西偏−）`);
     }
 
     const NOAA_KEYS = ['zNEw7'];
@@ -2354,6 +3936,379 @@
       }, 2300);
     }
 
+    const syncModal = document.getElementById('sync-modal');
+    const btnSyncAccount = document.getElementById('btn-sync-account');
+    const btnCloseSync = document.getElementById('btn-close-sync');
+    const btnCloseSyncFooter = document.getElementById('btn-close-sync-footer');
+    const chkAutoSync = document.getElementById('chk-auto-sync');
+    const btnGoogleLogin = document.getElementById('btn-google-login');
+    const btnGoogleLogout = document.getElementById('btn-google-logout');
+    const googleAccountChooser = document.getElementById('google-account-chooser');
+    const googleChooserList = document.getElementById('google-chooser-list');
+    const btnCloseChooser = document.getElementById('btn-close-chooser');
+    const btnClearAllSavedAccounts = document.getElementById('btn-clear-all-saved-accounts');
+    const formGoogleAccount = document.getElementById('form-google-account');
+    const inputGoogleEmail = document.getElementById('input-google-email');
+    const inputGoogleName = document.getElementById('input-google-name');
+    const btnCopyUid = document.getElementById('btn-copy-uid');
+    const btnCloudPush = document.getElementById('btn-cloud-push');
+    const btnCloudPull = document.getElementById('btn-cloud-pull');
+    const btnBackupDriveExport = document.getElementById('btn-backup-drive-export');
+    const inputBackupImport = document.getElementById('input-backup-import');
+
+    function openSyncModal() {
+      updateSyncUI(state.sync.ready ? 'synced' : 'idle');
+      syncModal.classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      googleAccountChooser.classList.add('hidden');
+      syncModal.classList.add('hidden');
+    }
+
+    btnSyncAccount.addEventListener('click', openSyncModal);
+    btnCloseSync.addEventListener('click', closeSyncModal);
+    btnCloseSyncFooter.addEventListener('click', closeSyncModal);
+    syncModal.addEventListener('click', (e) => {
+      if (e.target === syncModal) closeSyncModal();
+    });
+
+    chkAutoSync.addEventListener('change', (e) => {
+      state.sync.autoSync = e.target.checked;
+      showToast(state.sync.autoSync ? 'クラウド自動同期をONにしました' : 'クラウド自動同期をOFFにしました');
+      if (state.sync.autoSync) scheduleCloudSave();
+    });
+
+    function renderGoogleChooserList() {
+      if (!googleChooserList) return;
+      googleChooserList.innerHTML = '';
+
+      if (btnClearAllSavedAccounts) {
+        btnClearAllSavedAccounts.classList.toggle('hidden', state.sync.savedAccounts.length === 0);
+      }
+
+      if (state.sync.savedAccounts.length === 0) {
+        googleChooserList.innerHTML = `
+          <div class="text-[10px] text-slate-400 py-1.5 text-center bg-slate-950/60 rounded-lg border border-slate-800/80">
+            保存されたアカウント履歴はありません。<br>下の欄からGoogleメールアドレスを入力して連携してください。
+          </div>
+        `;
+        return;
+      }
+
+      const activeAcc = getActiveGoogleAccount();
+      state.sync.savedAccounts.forEach(acc => {
+        const isCurrent = activeAcc && activeAcc.email.toLowerCase() === acc.email.toLowerCase();
+        const row = document.createElement('div');
+        row.className = 'w-full flex items-center justify-between gap-1.5 p-1.5 rounded-lg border transition ' +
+          (isCurrent
+            ? 'bg-cyan-950/60 border-cyan-600 text-white'
+            : 'bg-slate-950 border-slate-800 text-slate-200');
+
+        const selectBtn = document.createElement('button');
+        selectBtn.type = 'button';
+        selectBtn.className = 'flex-1 flex items-center justify-between gap-2 text-left min-w-0 p-1 rounded hover:bg-slate-800/60 transition';
+
+        const initial = (acc.name?.[0] || acc.email?.[0] || 'G').toUpperCase();
+        selectBtn.innerHTML = `
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white keep-white font-bold text-xs flex items-center justify-center flex-shrink-0">
+              ${initial}
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-bold truncate">${acc.name || acc.email}</div>
+              <div class="text-[10px] text-slate-400 font-mono truncate">${acc.email}</div>
+            </div>
+          </div>
+          <span class="text-[10px] px-2 py-0.5 rounded font-semibold flex-shrink-0 ${isCurrent ? 'bg-cyan-600 text-white keep-white' : 'bg-slate-800 text-cyan-300'}">
+            ${isCurrent ? '連携中' : '選択'}
+          </span>
+        `;
+        selectBtn.addEventListener('click', () => {
+          selectGoogleAccount(acc);
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'px-2 py-1.5 rounded-md bg-rose-950/50 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 text-[10px] font-semibold flex items-center gap-0.5 flex-shrink-0 transition active:scale-95';
+        deleteBtn.title = 'このアカウントの連携履歴を削除（非表示）';
+        deleteBtn.innerHTML = `
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          <span>削除</span>
+        `;
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeSavedGoogleAccount(acc.email);
+        });
+
+        row.appendChild(selectBtn);
+        row.appendChild(deleteBtn);
+        googleChooserList.appendChild(row);
+      });
+    }
+
+    async function removeSavedGoogleAccount(email) {
+      if (!email) return;
+      const targetLower = email.trim().toLowerCase();
+      state.sync.savedAccounts = state.sync.savedAccounts.filter(
+        a => a.email.toLowerCase() !== targetLower
+      );
+
+      const activeAcc = getActiveGoogleAccount();
+      const wasActive = activeAcc && activeAcc.email.toLowerCase() === targetLower;
+
+      if (wasActive) {
+        state.sync.googleAccount = null;
+        if (auth && auth.currentUser && !auth.currentUser.isAnonymous) {
+          try {
+            await signOut(auth);
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await signInAnonymously(auth);
+            }
+            currentUser = auth.currentUser;
+          } catch (err) {
+            console.warn('Sign-out on account delete:', err);
+          }
+        }
+        attachWorkspaceListener();
+        updateSyncUI('idle', 'Googleアカウント連携を解除・削除しました');
+      }
+
+      await saveAccountHistoryToCloud();
+      renderGoogleChooserList();
+      showToast(`アカウント (${email}) を一覧から削除しました`);
+    }
+
+    btnClearAllSavedAccounts?.addEventListener('click', () => {
+      if (state.sync.savedAccounts.length === 0) return;
+      openConfirmModal(
+        'アカウント履歴の全削除',
+        'これまで使用したGoogleアカウントの履歴をすべて一覧から削除し、現在の連携も解除しますか？',
+        async () => {
+          state.sync.savedAccounts = [];
+          state.sync.googleAccount = null;
+          await saveAccountHistoryToCloud();
+          attachWorkspaceListener();
+          updateSyncUI('idle', 'アカウント履歴をすべて削除しました');
+          renderGoogleChooserList();
+          showToast('すべてのアカウント履歴を削除しました');
+        }
+      );
+    });
+
+    function openGoogleAccountChooser() {
+      renderGoogleChooserList();
+      googleAccountChooser.classList.remove('hidden');
+      setTimeout(() => {
+        if (state.sync.savedAccounts.length === 0 && inputGoogleEmail) {
+          inputGoogleEmail.focus();
+        }
+      }, 50);
+    }
+
+    btnCloseChooser?.addEventListener('click', () => {
+      googleAccountChooser.classList.add('hidden');
+    });
+
+    async function selectGoogleAccount(accountObj) {
+      if (!accountObj || !accountObj.email) return;
+      const email = accountObj.email.trim().toLowerCase();
+      const name = (accountObj.name || email.split('@')[0]).trim();
+      const photoURL = accountObj.photoURL || '';
+
+      state.sync.googleAccount = { email, name, photoURL };
+      rememberGoogleAccount(state.sync.googleAccount);
+      googleAccountChooser.classList.add('hidden');
+
+      updateSyncUI('syncing');
+      attachWorkspaceListener();
+
+      if (currentUser && db) {
+        await pullWorkspaceFromCloud(false);
+        await pushWorkspaceToCloud(false);
+      }
+      updateSyncUI('synced');
+      showToast(`Googleアカウント (${email}) で連携しました`);
+    }
+
+    formGoogleAccount?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = (inputGoogleEmail.value || '').trim().toLowerCase();
+      const name = (inputGoogleName.value || '').trim();
+      if (!email || !email.includes('@')) {
+        showToast('有効なGoogleメールアドレスを入力してください', 'error');
+        return;
+      }
+      inputGoogleEmail.value = '';
+      inputGoogleName.value = '';
+      await selectGoogleAccount({
+        email,
+        name: name || email.split('@')[0],
+        photoURL: ''
+      });
+    });
+
+    // Googleアカウント選択＆連携ボタン
+    btnGoogleLogin.addEventListener('click', async () => {
+      // Firebase Auth の Google OAuth ポップアップで常にアカウント選択画面 (select_account) を要求
+      if (auth) {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        try {
+          const result = await signInWithPopup(auth, provider);
+          if (result && result.user) {
+            currentUser = result.user;
+            await selectGoogleAccount({
+              email: currentUser.email || `${currentUser.uid}@google.user`,
+              name: currentUser.displayName || currentUser.email || 'Googleユーザー',
+              photoURL: currentUser.photoURL || ''
+            });
+            return;
+          }
+        } catch (err) {
+          // ユーザーが自らポップアップを閉じた場合以外は、アプリ内Googleアカウント選択パネルを表示
+          if (err && err.code === 'auth/cancelled-popup-request') {
+            return;
+          }
+          console.info('Opening built-in Google account chooser:', err?.code || err?.message);
+        }
+      }
+      openGoogleAccountChooser();
+    });
+
+    btnGoogleLogout.addEventListener('click', async () => {
+      state.sync.googleAccount = null;
+      googleAccountChooser.classList.add('hidden');
+      if (auth) {
+        try {
+          if (auth.currentUser && !auth.currentUser.isAnonymous) {
+            await signOut(auth);
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await signInAnonymously(auth);
+            }
+            currentUser = auth.currentUser;
+          }
+        } catch (err) {
+          console.warn('Sign-out fallback:', err);
+        }
+      }
+      await saveAccountHistoryToCloud();
+      attachWorkspaceListener();
+      updateSyncUI('idle', 'Googleアカウント連携を解除しました');
+      showToast('Googleアカウント連携を解除しました');
+    });
+
+    // User ID コピー (iFrame制限対応のため execCommand を使用)
+    btnCopyUid.addEventListener('click', () => {
+      const uid = currentUser?.uid || '';
+      if (!uid) {
+        showToast('コピーするIDがありません', 'error');
+        return;
+      }
+      const tempInput = document.createElement('textarea');
+      tempInput.value = uid;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast('ユーザーIDをコピーしました');
+      } catch (_) {
+        showToast('コピーに失敗しました', 'error');
+      }
+      document.body.removeChild(tempInput);
+    });
+
+    btnCloudPush.addEventListener('click', () => pushWorkspaceToCloud(true));
+    btnCloudPull.addEventListener('click', () => pullWorkspaceFromCloud(true));
+
+    // Googleドライブ / ファイル共有バックアップ出力 (.json)
+    btnBackupDriveExport.addEventListener('click', async () => {
+      const backupPayload = {
+        app: 'GeoStereo',
+        version: 5,
+        exportedAt: new Date().toISOString(),
+        declination: state.declination,
+        lightMode: state.lightMode,
+        groups: groups,
+        records: state.records
+      };
+      const jsonStr = JSON.stringify(backupPayload, null, 2);
+      const fileName = `GeoStereo_Backup_${exportTimestamp()}.json`;
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+
+      // スマホ等で Web Share API (Googleドライブアプリへ直接保存) が使える場合は優先利用
+      try {
+        const file = new File([blob], fileName, { type: 'application/json' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'GeoStereo バックアップ',
+            text: `GeoStereo 測定データバックアップ (${state.records.length}件)`,
+            files: [file]
+          });
+          showToast('共有シートからGoogleドライブ等へ保存できます');
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+
+      downloadBlob(blob, fileName);
+      showToast('バックアップファイル (.json) を保存しました');
+    });
+
+    // バックアップファイル (.json) からの復元
+    inputBackupImport.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const parsed = JSON.parse(String(ev.target?.result || ''));
+          if (!parsed || (!Array.isArray(parsed.records) && !parsed.groups)) {
+            throw new Error('Invalid backup format');
+          }
+          if (parsed.groups && typeof parsed.groups === 'object') {
+            groups = parsed.groups;
+            Object.keys(groups).forEach(gid => {
+              if (state.groupVisible[gid] === undefined) state.groupVisible[gid] = true;
+            });
+          }
+          if (Array.isArray(parsed.records)) {
+            state.records = parsed.records;
+            state.records.forEach((r, idx) => r.id = idx + 1);
+          }
+          if (typeof parsed.declination === 'number') {
+            setDeclinationValue(parsed.declination);
+          }
+          if (typeof parsed.lightMode === 'boolean') {
+            applyTheme(parsed.lightMode, true);
+          }
+          if (!groups[state.activeGroup]) {
+            state.activeGroup = Object.keys(groups)[0] || 'Loc1';
+          }
+          renderGroupSelectors();
+          renderGroupFilters();
+          renderRecordList();
+          updateGroupCounts();
+          setActiveGroup(state.activeGroup);
+          drawStereonet();
+          await pushWorkspaceToCloud(false);
+          showToast(`バックアップから ${state.records.length} 件のデータを復元しました`);
+        } catch (err) {
+          showToast('バックアップファイルの読み込みに失敗しました', 'error');
+        } finally {
+          inputBackupImport.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+
     /* オフライン対応: Service Worker 登録 (https または localhost のみ) */
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => {
@@ -2364,10 +4319,11 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadGroups();
       loadSavedRecords();
+      loadSavedTheme();
       renderGroupSelectors();
       renderGroupFilters();
       if (!groups[state.activeGroup]) {
-        state.activeGroup = Object.keys(groups)[0] || 'Y';
+        state.activeGroup = Object.keys(groups)[0] || 'Loc1';
       }
       setActiveGroup(state.activeGroup);
       resizeCanvas();
@@ -2375,8 +4331,11 @@
       drawStereonet();
       drawBubbleLevel();
 
-      // 前回の偏角を復元 (オフラインでも使える)
+      // 前回の偏角を復元
       loadSavedDeclination();
+
+      // クラウド同期・認証の初期化
+      initCloudSync();
 
       // 起動時に毎回ボタンを押さなくてもセンサー・GPSを自動開始
       startSensors(false).then(ok => { if (!ok) armFirstTapSensorStart(); });
