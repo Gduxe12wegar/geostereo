@@ -2195,47 +2195,69 @@
       textEl.textContent = `${String(Math.round(trueHeading) % 360).padStart(3, '0')}°`;
     }
 
-    function updateFromSensors(alpha, beta, gamma) {
-      if (state.isSimMode) return;
+    /* =========================================================================
+       姿勢センサー → 面の走向・傾斜
+       W3C DeviceOrientation: R = Rz(α)·Rx(β)·Ry(γ)  (端末座標 → 地球座標 X=東, Y=北, Z=上)
+       ・端末の Z軸 = 画面から手前に向かう法線、Y軸 = 端末の上端方向
+       ・面の「上向き法線」は、面の傾斜方向側へ傾く(例: 東へ下がる面の上向き法線は東へ傾く)
+         → 傾斜方向 = 上向き法線の水平成分の方位
+       ・スマホの背面を当てても画面を当てても同じ面になるよう、法線は上向きに揃える
+       ========================================================================= */
+    const D2R = Math.PI / 180;
+    const R2D = 180 / Math.PI;
 
-      const degToRad = Math.PI / 180;
-      const a = (alpha || 0) * degToRad;
-      const b = (beta || 0) * degToRad;
-      const g = (gamma || 0) * degToRad;
-
+    function orientationAxes(alphaDeg, betaDeg, gammaDeg) {
+      const a = alphaDeg * D2R, b = betaDeg * D2R, g = gammaDeg * D2R;
       const ca = Math.cos(a), sa = Math.sin(a);
       const cb = Math.cos(b), sb = Math.sin(b);
       const cg = Math.cos(g), sg = Math.sin(g);
+      return {
+        // 端末Z軸(画面法線)
+        z: { E: ca * sg + sa * sb * cg, N: sa * sg - ca * sb * cg, U: cb * cg },
+        // 端末Y軸(上端方向)
+        y: { E: -sa * cb, N: ca * cb, U: sb }
+      };
+    }
 
-      const E_raw = -(ca * sg + cg * sa * sb);
-      const N_raw = -(sa * sg - ca * cg * sb);
-      const U_raw = -cb * cg;
+    /* 面の傾斜・傾斜方向(磁北基準)を返す。水平に近く方向が定まらない時 dipDirMag は null */
+    function computePlaneFromOrientation(alphaDeg, betaDeg, gammaDeg) {
+      const z = orientationAxes(alphaDeg, betaDeg, gammaDeg).z;
+      const s = z.U >= 0 ? 1 : -1;           // 上向き法線に揃える
+      const E = s * z.E, N = s * z.N, U = s * z.U;
+      const h = Math.hypot(E, N);
+      const dip = Math.atan2(h, Math.max(0, U)) * R2D;   // acosより精度が良い (0〜90°)
+      const dipDirMag = h > 0.0017 ? (Math.atan2(E, N) * R2D + 360) % 360 : null; // 約0.1°未満は方向不定
+      return { dip, dipDirMag };
+    }
 
-      let E_down, N_down, U_down;
-      if (U_raw > 0) {
-        E_down = -E_raw;
-        N_down = -N_raw;
-        U_down = -U_raw;
-      } else {
-        E_down = E_raw;
-        N_down = N_raw;
-        U_down = U_raw;
+    /* 端末が向いている方位(コンパス表示用)。ほぼ水平なら上端、立てているなら背面側 */
+    function computeDeviceHeading(alphaDeg, betaDeg, gammaDeg) {
+      const ax = orientationAxes(alphaDeg, betaDeg, gammaDeg);
+      if (Math.abs(ax.z.U) >= 0.7) {
+        return (Math.atan2(ax.y.E, ax.y.N) * R2D + 360) % 360;
+      }
+      return (Math.atan2(-ax.z.E, -ax.z.N) * R2D + 360) % 360;
+    }
+
+    function updateFromSensors(alpha, beta, gamma) {
+      if (state.isSimMode) return;
+
+      const a = Number.isFinite(alpha) ? alpha : 0;
+      const b = Number.isFinite(beta) ? beta : 0;
+      const g = Number.isFinite(gamma) ? gamma : 0;
+
+      updateCompass(computeDeviceHeading(a, b, g));
+
+      const plane = computePlaneFromOrientation(a, b, g);
+      if (plane.dipDirMag === null) {
+        // ほぼ水平: 傾斜だけ更新し、走向・傾斜方向は直前の値を保持
+        applyFilteredMeasurement(null, plane.dip, null, b, g);
+        return;
       }
 
-      if (Math.abs(cb) > 0.5) {
-        updateCompass((Math.atan2(-sa * cb, ca * cb) / degToRad + 360) % 360);
-      } else {
-        updateCompass((Math.atan2(E_raw, N_raw) / degToRad + 360) % 360);
-      }
-
-      const dipRad = Math.acos(Math.max(0, Math.min(1, Math.abs(U_down))));
-      const dipRaw = dipRad / degToRad;
-
-      let magDipDir = (Math.atan2(E_down, N_down) / degToRad + 360) % 360;
-      let trueDipDir = ((magDipDir + state.declination) % 360 + 360) % 360;
-      let strikeRHR = ((trueDipDir - 90) % 360 + 360) % 360;
-
-      applyFilteredMeasurement(strikeRHR, dipRaw, trueDipDir, beta, gamma);
+      const trueDipDir = ((plane.dipDirMag + state.declination) % 360 + 360) % 360;
+      const strikeRHR = ((trueDipDir - 90) % 360 + 360) % 360;
+      applyFilteredMeasurement(strikeRHR, plane.dip, trueDipDir, b, g);
     }
 
     function applyFilteredMeasurement(targetStrike, targetDip, targetDipDir, beta, gamma) {
@@ -2246,9 +2268,13 @@
         return ((curr + diff * a) % 360 + 360) % 360;
       }
 
-      state.current.strike = smoothAngle(state.current.strike, targetStrike, alpha);
+      if (targetStrike !== null && targetStrike !== undefined) {
+        state.current.strike = smoothAngle(state.current.strike, targetStrike, alpha);
+      }
       state.current.dip = state.current.dip + (targetDip - state.current.dip) * alpha;
-      state.current.dipDir = smoothAngle(state.current.dipDir, targetDipDir, alpha);
+      if (targetDipDir !== null && targetDipDir !== undefined) {
+        state.current.dipDir = smoothAngle(state.current.dipDir, targetDipDir, alpha);
+      }
       state.current.beta = beta !== undefined ? beta : 0;
       state.current.gamma = gamma !== undefined ? gamma : 0;
 
@@ -2280,21 +2306,88 @@
     const sensorDot = document.getElementById('sensor-dot');
     const sensorText = document.getElementById('sensor-text');
 
-    function onDeviceOrientation(e) {
-      if (e.beta === null && e.gamma === null) return; // センサーなし端末では無視
+    /* 方位(α)の基準を揃える。
+       Android: deviceorientationabsolute の α だけが磁北基準。deviceorientation の α は
+                起動時基準(相対)のため、両方を混ぜると方位が飛ぶ → 絶対イベントを優先し相対は無視。
+       iOS:     α は相対のため webkitCompassHeading で磁北に合わせる(オフセットを校正して保持)。 */
+    const orient = {
+      absoluteSeen: false,
+      listenStart: 0,
+      iosOffset: null,        // α(相対) + offset = α(磁北基準)
+      relativeNotified: false
+    };
+
+    function wrap180(d) { return ((d + 540) % 360) - 180; }
+
+    function iosAlphaToAbsolute(alphaRel, beta, gamma, heading) {
+      const ax = orientationAxes(alphaRel, beta, gamma);
+      const tilt = Math.acos(Math.min(1, Math.abs(ax.z.U))) * R2D; // 端末自身の水平からの傾き
+      let azRel = null;
+      if (tilt < 20) {
+        azRel = (Math.atan2(ax.y.E, ax.y.N) * R2D + 360) % 360;            // 水平: 上端の方位
+      } else if (tilt > 70) {
+        azRel = (Math.atan2(-ax.z.E, -ax.z.N) * R2D + 360) % 360;          // 直立: 背面の方位
+      } else if (orient.iosOffset === null) {
+        azRel = (Math.atan2(ax.y.E, ax.y.N) * R2D + 360) % 360;            // 初回のみ暫定
+      }
+      if (azRel !== null) {
+        const off = azRel - heading;
+        if (orient.iosOffset === null) orient.iosOffset = ((off % 360) + 360) % 360;
+        else orient.iosOffset = (((orient.iosOffset + wrap180(off - orient.iosOffset) * 0.15) % 360) + 360) % 360;
+      }
+      return orient.iosOffset === null ? null : (alphaRel + orient.iosOffset + 360) % 360;
+    }
+
+    function markSensorActive(headingReliable) {
       if (!state.sensorActive && !state.isSimMode) {
         state.sensorActive = true;
         sensorDot.className = 'w-2 h-2 rounded-full bg-emerald-400 live-pulse';
-        sensorText.textContent = '計測中';
         btnSensorPerm.classList.add('hidden');
       }
+      if (!state.isSimMode) {
+        sensorText.textContent = headingReliable ? '計測中' : '計測中(方位が未校正)';
+      }
+      if (!headingReliable && !orient.relativeNotified) {
+        orient.relativeNotified = true;
+        showToast('この端末は磁北基準の方位を取得できません。走向・傾斜方向の値は信頼できません', 'error');
+      }
+    }
 
-      let alpha = e.alpha || 0;
-      if (typeof e.webkitCompassHeading !== 'undefined') {
-        alpha = (360 - e.webkitCompassHeading + 360) % 360;
+    function onDeviceOrientation(e) {
+      if (e.beta === null || e.beta === undefined || e.gamma === null || e.gamma === undefined) return;
+      if (!orient.listenStart) orient.listenStart = Date.now();
+
+      let alphaAbs = null;
+      let reliable = true;
+
+      if (e.type === 'deviceorientationabsolute') {
+        if (e.alpha === null || e.alpha === undefined) return;
+        orient.absoluteSeen = true;
+        alphaAbs = e.alpha;
+      } else if (typeof e.webkitCompassHeading === 'number' && Number.isFinite(e.webkitCompassHeading)) {
+        // iOS
+        if (typeof e.webkitCompassAccuracy === 'number' && e.webkitCompassAccuracy < 0 && orient.iosOffset === null) return;
+        const usable = !(typeof e.webkitCompassAccuracy === 'number' && e.webkitCompassAccuracy < 0);
+        if (usable) {
+          alphaAbs = iosAlphaToAbsolute(e.alpha || 0, e.beta, e.gamma, e.webkitCompassHeading);
+        } else if (orient.iosOffset !== null) {
+          alphaAbs = ((e.alpha || 0) + orient.iosOffset + 360) % 360;
+        }
+        if (alphaAbs === null) return;
+      } else if (orient.absoluteSeen) {
+        return; // Android: 相対イベントは使わない(絶対イベントのみ)
+      } else if (e.absolute === true && e.alpha !== null && e.alpha !== undefined) {
+        alphaAbs = e.alpha;
+        orient.absoluteSeen = true;
+      } else {
+        // 絶対イベントが来るかどうか少し待つ。来なければ相対αで暫定動作(方位は不確か)
+        if (Date.now() - orient.listenStart < 1500) return;
+        alphaAbs = e.alpha || 0;
+        reliable = false;
       }
 
-      updateFromSensors(alpha, e.beta, e.gamma);
+      markSensorActive(reliable);
+      updateFromSensors(alphaAbs, e.beta, e.gamma);
     }
 
     let orientationListening = false;
@@ -2302,6 +2395,7 @@
     function attachOrientationListeners() {
       if (orientationListening) return;
       orientationListening = true;
+      orient.listenStart = Date.now();
       window.addEventListener('deviceorientationabsolute', onDeviceOrientation, true);
       window.addEventListener('deviceorientation', onDeviceOrientation, true);
     }
@@ -2582,9 +2676,9 @@
         if (navigator.vibrate) navigator.vibrate(50);
       } catch (e) {}
 
-      const strike = Math.round(state.current.strike);
+      const strike = Math.round(state.current.strike) % 360;
       const dip = Math.round(state.current.dip);
-      const dipDir = Math.round(state.current.dipDir);
+      const dipDir = Math.round(state.current.dipDir) % 360;
       const poleTrend = (dipDir + 180) % 360;
       const polePlunge = 90 - dip;
       const g = groups[state.activeGroup] || { label: state.activeGroup };
