@@ -1050,17 +1050,23 @@
       scheduleSave();
     }
 
+    function escapeHtml(v) {
+      return String(v === null || v === undefined ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function formatAngle3(deg) {
       const rounded = Math.round((deg % 360 + 360) % 360);
       return String(rounded).padStart(3, '0');
     }
 
     function getQuadrantStrike(strike) {
-      strike = (strike % 360 + 360) % 360;
-      if (strike <= 90) return `N${Math.round(strike)}°E`;
-      if (strike <= 180) return `S${Math.round(180 - strike)}°E`;
-      if (strike <= 270) return `S${Math.round(strike - 180)}°W`;
-      return `N${Math.round(360 - strike)}°W`;
+      const v = Math.round((strike % 360 + 360) % 360) % 360;   // 先に整数へ丸めてから分岐 (N90°W / S0°E の不整合を防ぐ)
+      if (v <= 90) return `N${v}°E`;
+      if (v <= 180) return `S${180 - v}°E`;
+      if (v <= 270) return `S${v - 180}°W`;
+      return `N${360 - v}°W`;
     }
 
     function getCardinalDirection(angle) {
@@ -1148,7 +1154,8 @@
 
       // 気泡
       const scaleFactor = maxR / 45;
-      let bx = cx - Math.sin(gRad) * 45 * scaleFactor;
+      // 鉛直上向きを端末座標で表した成分 (-cosβ·sinγ, sinβ)。画面を下に向けた状態でも気泡が正しく動く
+      let bx = cx + (-Math.cos(bRad) * Math.sin(gRad)) * 45 * scaleFactor;
       let by = cy - Math.sin(bRad) * 45 * scaleFactor;
 
       const limit = maxR - bubbleR - 1;
@@ -1199,31 +1206,32 @@
       const records = state.records.filter(r => r.group === groupId);
       if (records.length === 0) return null;
 
-      let sumX = 0, sumY = 0, sumZ = 0;
-
-      records.forEach(r => {
-        const poleTrendRad = ((r.dipDir + 180) % 360) * (Math.PI / 180);
-        const polePlungeRad = (90 - r.dip) * (Math.PI / 180);
-
-        const x = Math.sin(poleTrendRad) * Math.cos(polePlungeRad);
-        const y = Math.cos(poleTrendRad) * Math.cos(polePlungeRad);
-        const z = -Math.sin(polePlungeRad);
-
-        sumX += x;
-        sumY += y;
-        sumZ += z;
+      // 極ベクトル(下半球, X=東 Y=北 Z=上)。面の法線は無向線(軸データ)なので、
+      // 高角面で ±逆向きの極が混ざっても相殺しないよう、基準ベクトルと同じ向きに揃えてから合成する。
+      const vecs = records.map(r => {
+        const t = ((r.dipDir + 180) % 360) * (Math.PI / 180);
+        const p = (90 - r.dip) * (Math.PI / 180);
+        return [Math.sin(t) * Math.cos(p), Math.cos(t) * Math.cos(p), -Math.sin(p)];
       });
 
-      const R_len = Math.hypot(sumX, sumY, sumZ);
-      if (R_len === 0) return null;
+      let ref = vecs[0];
+      let sum = [0, 0, 0];
+      for (let pass = 0; pass < 3; pass++) {
+        sum = [0, 0, 0];
+        vecs.forEach(v => {
+          const sgn = (v[0] * ref[0] + v[1] * ref[1] + v[2] * ref[2]) < 0 ? -1 : 1;
+          sum[0] += sgn * v[0]; sum[1] += sgn * v[1]; sum[2] += sgn * v[2];
+        });
+        const len = Math.hypot(sum[0], sum[1], sum[2]);
+        if (len === 0) return null;
+        ref = [sum[0] / len, sum[1] / len, sum[2] / len];
+      }
 
-      const avgX = sumX / R_len;
-      const avgY = sumY / R_len;
-      const avgZ = sumZ / R_len;
+      let [avgX, avgY, avgZ] = ref;
+      if (avgZ > 0) { avgX = -avgX; avgY = -avgY; avgZ = -avgZ; }   // 下半球へ戻す
 
-      const plungeRad = Math.asin(Math.abs(avgZ));
-      const avgPolePlunge = plungeRad * (180 / Math.PI);
-      let avgPoleTrend = (Math.atan2(avgX, avgY) * (180 / Math.PI) + 360) % 360;
+      const avgPolePlunge = Math.asin(Math.min(1, Math.abs(avgZ))) * (180 / Math.PI);
+      const avgPoleTrend = (Math.atan2(avgX, avgY) * (180 / Math.PI) + 360) % 360;
 
       const avgDip = 90 - avgPolePlunge;
       const avgDipDir = (avgPoleTrend + 180) % 360;
@@ -1893,6 +1901,20 @@
         });
       }
 
+      // 4b. Live (current) plane
+      if (state.current.dip >= 0) {
+        const activeG = groups[state.activeGroup] || { color: '#06b6d4', label: 'Live' };
+        enqueuePlane3D({
+          strike: state.current.strike,
+          dip: state.current.dip,
+          color: activeG.color,
+          label: '現在値',
+          isMean: false,
+          isLive: true,
+          isSelected: false
+        });
+      }
+
       // 5. Equatorial Primitive Rim (z = 0) & Degree Ticks & Cardinal Labels (N, E, S, W)
       const rimSteps = 72;
       for (let i = 0; i < rimSteps; i++) {
@@ -1976,7 +1998,7 @@
         chip.style.color = on ? g.color : '#64748b';
         chip.style.borderColor = on ? g.color : '#1e293b';
         chip.style.backgroundColor = on ? `${g.color}22` : '#020617';
-        chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full" style="background:${g.color}"></span><span>${g.label}</span><span class="font-mono opacity-80">(${count})</span>`;
+        chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full" style="background:${g.color}"></span><span>${escapeHtml(g.label)}</span><span class="font-mono opacity-80">(${count})</span>`;
         chip.addEventListener('click', () => {
           state.groupVisible[g.id] = state.groupVisible[g.id] === false;
           renderGroupFilters();
@@ -2172,7 +2194,7 @@
         state.view3d.selectedRecordId = rec.id;
         hoveredRecordId = rec.id;
         const g = groups[rec.group] || { color: '#94a3b8', label: rec.groupLabel || rec.group };
-        tooltip3d.innerHTML = `<span style="color:${g.color};font-weight:bold;">[${g.label}] #${rec.id}</span> 走向:<span class="text-white font-bold">${formatAngle3(rec.strike)}°(${rec.quadrant})</span> 傾斜:<span class="text-white font-bold">${rec.dip}°${rec.cardinal}</span> | 極:${formatAngle3(rec.poleTrend)}°/${rec.polePlunge}° ${rec.note ? '・' + rec.note : ''}`;
+        tooltip3d.innerHTML = `<span style="color:${g.color};font-weight:bold;">[${escapeHtml(g.label)}] #${rec.id}</span> 走向:<span class="text-white font-bold">${formatAngle3(rec.strike)}°(${rec.quadrant})</span> 傾斜:<span class="text-white font-bold">${rec.dip}°${rec.cardinal}</span> | 極:${formatAngle3(rec.poleTrend)}°/${rec.polePlunge}° ${rec.note ? '・' + escapeHtml(rec.note) : ''}`;
       } else {
         state.view3d.selectedRecordId = null;
         tooltip3d.textContent = '下半球ボウルをドラッグして回転 / 極点(●)をタップで測定値の詳細を表示';
@@ -2220,13 +2242,19 @@
     }
 
     /* 面の傾斜・傾斜方向(磁北基準)を返す。水平に近く方向が定まらない時 dipDirMag は null */
-    function computePlaneFromOrientation(alphaDeg, betaDeg, gammaDeg) {
+    function computePlaneFromOrientation(alphaDeg, betaDeg, gammaDeg, prevDipDirMag) {
       const z = orientationAxes(alphaDeg, betaDeg, gammaDeg).z;
       const s = z.U >= 0 ? 1 : -1;           // 上向き法線に揃える
       const E = s * z.E, N = s * z.N, U = s * z.U;
       const h = Math.hypot(E, N);
       const dip = Math.atan2(h, Math.max(0, U)) * R2D;   // acosより精度が良い (0〜90°)
-      const dipDirMag = h > 0.0017 ? (Math.atan2(E, N) * R2D + 360) % 360 : null; // 約0.1°未満は方向不定
+      let dipDirMag = h > 0.0017 ? (Math.atan2(E, N) * R2D + 360) % 360 : null; // 約0.1°未満は方向不定
+      // 傾斜が約88.5°を超える(ほぼ垂直の)面は、法線の上下判定が揺れると傾斜方向が180°入れ替わる。
+      // 直前の向きに近い側を選び、ちらつき(南北逆転)を防ぐ。
+      if (dipDirMag !== null && U < 0.026 && Number.isFinite(prevDipDirMag)) {
+        const alt = (dipDirMag + 180) % 360;
+        if (Math.abs(wrap180(alt - prevDipDirMag)) < Math.abs(wrap180(dipDirMag - prevDipDirMag))) dipDirMag = alt;
+      }
       return { dip, dipDirMag };
     }
 
@@ -2248,7 +2276,9 @@
 
       updateCompass(computeDeviceHeading(a, b, g));
 
-      const plane = computePlaneFromOrientation(a, b, g);
+      const prevMag = state.sensorActive ? (((state.current.dipDir - state.declination) % 360) + 360) % 360 : null;
+      const plane = computePlaneFromOrientation(a, b, g, prevMag);
+      sensorDebug.plane = plane; sensorDebug.alphaAbs = a; sensorDebug.beta = b; sensorDebug.gamma = g;
       if (plane.dipDirMag === null) {
         // ほぼ水平: 傾斜だけ更新し、走向・傾斜方向は直前の値を保持
         applyFilteredMeasurement(null, plane.dip, null, b, g);
@@ -2332,10 +2362,36 @@
       }
       if (azRel !== null) {
         const off = azRel - heading;
-        if (orient.iosOffset === null) orient.iosOffset = ((off % 360) + 360) % 360;
-        else orient.iosOffset = (((orient.iosOffset + wrap180(off - orient.iosOffset) * 0.15) % 360) + 360) % 360;
+        if (orient.iosOffset === null) {
+          orient.iosOffset = ((off % 360) + 360) % 360;
+        } else {
+          const diff = wrap180(off - orient.iosOffset);
+          // 直立時の校正値が既存値と大きく食い違う場合は、iOSの方位基準が切り替わった外れ値として捨てる
+          const outlier = tilt > 70 && Math.abs(diff) > 40;
+          if (!outlier) orient.iosOffset = (((orient.iosOffset + diff * 0.15) % 360) + 360) % 360;
+          else orient.rejected = (orient.rejected || 0) + 1;
+        }
       }
       return orient.iosOffset === null ? null : (alphaRel + orient.iosOffset + 360) % 360;
+    }
+
+    /* 診断表示: 画面上部の「計測中」の文字をタップで表示/非表示 */
+    const sensorDebug = { src: '-', plane: null, alphaAbs: 0, beta: 0, gamma: 0, raw: null };
+    const debugEl = document.createElement('div');
+    debugEl.id = 'sensor-debug';
+    debugEl.className = 'hidden text-[9px] font-mono text-amber-300 bg-slate-950 border border-amber-800/60 rounded p-1 mb-1 whitespace-pre-wrap break-all';
+    (document.getElementById('gps-declination-status') || document.body).insertAdjacentElement('afterend', debugEl);
+    document.getElementById('sensor-text').addEventListener('click', () => debugEl.classList.toggle('hidden'));
+    function renderSensorDebug() {
+      if (debugEl.classList.contains('hidden')) return;
+      const p = sensorDebug.plane, f = (v, n = 1) => (v === null || v === undefined || !Number.isFinite(v)) ? '-' : v.toFixed(n);
+      debugEl.textContent =
+        `src=${sensorDebug.src} absSeen=${orient.absoluteSeen}\n` +
+        `rawα=${f(sensorDebug.raw && sensorDebug.raw.alpha)} β=${f(sensorDebug.beta)} γ=${f(sensorDebug.gamma)}\n` +
+        `α(磁北基準)=${f(sensorDebug.alphaAbs)} iosOffset=${f(orient.iosOffset)} rejected=${orient.rejected || 0}\n` +
+        `iosHeading=${f(sensorDebug.raw && sensorDebug.raw.heading)} acc=${f(sensorDebug.raw && sensorDebug.raw.acc)}\n` +
+        `磁北基準 傾斜方向=${f(p && p.dipDirMag)} 傾斜=${f(p && p.dip)} 偏角=${state.declination}\n` +
+        `真北 傾斜方向=${f(state.current.dipDir)} 走向=${f(state.current.strike)}`;
     }
 
     function markSensorActive(headingReliable) {
@@ -2359,11 +2415,13 @@
 
       let alphaAbs = null;
       let reliable = true;
+      sensorDebug.raw = { alpha: e.alpha, heading: e.webkitCompassHeading, acc: e.webkitCompassAccuracy };
 
       if (e.type === 'deviceorientationabsolute') {
         if (e.alpha === null || e.alpha === undefined) return;
         orient.absoluteSeen = true;
         alphaAbs = e.alpha;
+        sensorDebug.src = 'android-absolute';
       } else if (typeof e.webkitCompassHeading === 'number' && Number.isFinite(e.webkitCompassHeading)) {
         // iOS
         if (typeof e.webkitCompassAccuracy === 'number' && e.webkitCompassAccuracy < 0 && orient.iosOffset === null) return;
@@ -2374,20 +2432,24 @@
           alphaAbs = ((e.alpha || 0) + orient.iosOffset + 360) % 360;
         }
         if (alphaAbs === null) return;
+        sensorDebug.src = 'ios-compass';
       } else if (orient.absoluteSeen) {
         return; // Android: 相対イベントは使わない(絶対イベントのみ)
       } else if (e.absolute === true && e.alpha !== null && e.alpha !== undefined) {
         alphaAbs = e.alpha;
         orient.absoluteSeen = true;
+        sensorDebug.src = 'event-absolute';
       } else {
         // 絶対イベントが来るかどうか少し待つ。来なければ相対αで暫定動作(方位は不確か)
         if (Date.now() - orient.listenStart < 1500) return;
         alphaAbs = e.alpha || 0;
         reliable = false;
+        sensorDebug.src = 'RELATIVE(unreliable)';
       }
 
       markSensorActive(reliable);
       updateFromSensors(alphaAbs, e.beta, e.gamma);
+      renderSensorDebug();
     }
 
     let orientationListening = false;
@@ -2463,7 +2525,9 @@
         sensorText.textContent = '手動シミュレータ動作中';
         updateSimulator();
       } else {
-        sensorDot.className = 'w-2 h-2 rounded-full bg-slate-600';
+        sensorDot.className = state.sensorActive
+          ? 'w-2 h-2 rounded-full bg-emerald-400 live-pulse'
+          : 'w-2 h-2 rounded-full bg-slate-600';
         sensorText.textContent = state.sensorActive ? '計測中' : '待機中';
       }
     });
@@ -2514,8 +2578,8 @@
         }
 
         btn.innerHTML = `
-          <span class="text-base font-bold font-mono truncate max-w-[96px] leading-tight">${g.label}</span>
-          <span class="text-[11px] font-medium truncate max-w-[96px] leading-tight mt-0.5" style="color: ${isActive ? g.color : '#64748b'}">${g.sub || '測定'}</span>
+          <span class="text-base font-bold font-mono truncate max-w-[96px] leading-tight">${escapeHtml(g.label)}</span>
+          <span class="text-[11px] font-medium truncate max-w-[96px] leading-tight mt-0.5" style="color: ${isActive ? g.color : '#64748b'}">${escapeHtml(g.sub || '測定')}</span>
         `;
 
         btn.addEventListener('click', () => {
@@ -2542,7 +2606,7 @@
       chip.type = 'button';
       chip.setAttribute('data-group-filter', g.id);
       chip.className = 'filter-chip flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition active:scale-95';
-      chip.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${g.color}"></span><span class="truncate max-w-[4.5rem]">${g.label}</span><span class="font-mono opacity-80">(<span id="count-group-${g.id}">${count}</span>)</span>`;
+      chip.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${g.color}"></span><span class="truncate max-w-[4.5rem]">${escapeHtml(g.label)}</span><span class="font-mono opacity-80">(<span id="count-group-${g.id}">${count}</span>)</span>`;
       styleFilterChip(chip, g);
       chip.addEventListener('click', () => {
         state.groupVisible[g.id] = state.groupVisible[g.id] === false;
@@ -2618,6 +2682,7 @@
       }
       state.activeGroup = groupId;
       const g = groups[groupId];
+      scheduleSave();
 
       renderGroupSelectors();
 
@@ -2729,7 +2794,7 @@
         card.innerHTML = `
           <div class="flex items-center gap-2">
             <span class="w-10 h-6 rounded flex items-center justify-center font-mono text-xs font-bold px-1" style="background-color: ${g.color}25; border: 1px solid ${g.color}; color: ${g.color};">
-              ${g.label}
+              ${escapeHtml(g.label)}
             </span>
             <div class="flex flex-col">
               <div class="font-mono text-slate-200 font-semibold flex items-center gap-2.5 text-sm">
@@ -2741,7 +2806,7 @@
               <div class="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                 <span>極:${formatAngle3(rec.poleTrend)}°/${rec.polePlunge}°</span>
                 <span>${rec.timeStr}</span>
-                ${rec.note ? `<span class="text-slate-300 bg-slate-800 px-1 rounded">${rec.note}</span>` : ''}
+                ${rec.note ? `<span class="text-slate-300 bg-slate-800 px-1 rounded">${escapeHtml(rec.note)}</span>` : ''}
               </div>
             </div>
           </div>
@@ -3021,7 +3086,7 @@
       if (nearest) {
         hoveredRecordId = nearest.id;
         const g = groups[nearest.group] || { color: '#94a3b8', label: nearest.groupLabel || nearest.group };
-        tooltip.innerHTML = `<span style="color: ${g.color}; font-weight: bold;">[${g.label}] #${nearest.id}</span>: S <span class="text-white">${formatAngle3(nearest.strike)}°</span> / D <span class="text-white">${nearest.dip}° ${nearest.cardinal}</span> | 極: ${formatAngle3(nearest.poleTrend)}°/${nearest.polePlunge}° ${nearest.note ? ' - ' + nearest.note : ''}`;
+        tooltip.innerHTML = `<span style="color: ${g.color}; font-weight: bold;">[${escapeHtml(g.label)}] #${nearest.id}</span>: S <span class="text-white">${formatAngle3(nearest.strike)}°</span> / D <span class="text-white">${nearest.dip}° ${nearest.cardinal}</span> | 極: ${formatAngle3(nearest.poleTrend)}°/${nearest.polePlunge}° ${nearest.note ? ' - ' + escapeHtml(nearest.note) : ''}`;
       } else {
         hoveredRecordId = null;
         tooltip.textContent = 'プロットされた極点または大円をタップで詳細表示';
@@ -3050,7 +3115,7 @@
             <div class="flex items-center justify-between">
               <span class="font-bold flex items-center gap-1.5" style="color: ${g.color}">
                 <span class="w-2 h-2 rounded-full" style="background-color: ${g.color}"></span>
-                ${g.label} (${g.sub || ''})
+                ${escapeHtml(g.label)} (${escapeHtml(g.sub || '')})
               </span>
               <div class="flex items-center gap-2">
                 <span class="font-mono text-slate-400 text-[10px]">${avg.count} 点測定</span>
@@ -3070,7 +3135,7 @@
             <div class="flex items-center justify-between text-slate-500">
               <span class="font-bold flex items-center gap-1.5" style="color: ${g.color}aa">
                 <span class="w-2 h-2 rounded-full" style="background-color: ${g.color}88"></span>
-                ${g.label} (${g.sub || ''})
+                ${escapeHtml(g.label)} (${escapeHtml(g.sub || '')})
               </span>
               <span class="font-mono text-[10px]">測定なし (0点)</span>
             </div>
@@ -3599,9 +3664,8 @@
           }
           if (parsed.groups && typeof parsed.groups === 'object') {
             groups = parsed.groups;
-            Object.keys(groups).forEach(gid => {
-              if (state.groupVisible[gid] === undefined) state.groupVisible[gid] = true;
-            });
+            state.groupVisible = {};
+            Object.keys(groups).forEach(gid => { state.groupVisible[gid] = true; });
           }
           if (Array.isArray(parsed.records)) {
             state.records = parsed.records;
